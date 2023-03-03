@@ -37,6 +37,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterFeatureSink)
 
+from ..python_opencage_geocoder.opencage.geocoder import OpenCageGeocode
 
 class ForwardGeocode(QgsProcessingAlgorithm):
     """
