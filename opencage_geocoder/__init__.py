@@ -166,7 +166,7 @@ class OpenCagePlugin:
 
     def register(self):
         if self.api_key:
-            self.provider.set_config(self.api_key)
+            self.provider.set_config(self.api_key, "pt")
 
     def set_api_key(self, api_key):
         settings = QgsSettings()

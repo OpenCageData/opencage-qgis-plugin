@@ -31,11 +31,15 @@ __copyright__ = '(C) 2023 by opencage'
 __revision__ = '$Format:%H$'
 
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.analysis import QgsBatchGeocodeAlgorithm
+# from qgis.analysis import QgsBatchGeocodeAlgorithm
 from qgis.core import QgsProcessingProvider
 from .forward import ForwardGeocode
 
 from opencage_geocoder.gui.gui_utils import GuiUtils
+from opencage_geocoder.processing.algorithm import (
+    OpenCageBatchGeocode
+)
+
 import logging
 logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
@@ -44,6 +48,8 @@ class OpenCageProvider(QgsProcessingProvider):
     def __init__(self):
         super().__init__()
         self.api_key = None
+        self.region = None
+
         logging.debug("START*****************")
 
     def unload(self):
@@ -58,6 +64,7 @@ class OpenCageProvider(QgsProcessingProvider):
         Loads all algorithms belonging to this provider.
         """     
         self.addAlgorithm(ForwardGeocode())
+        # self.addAlgorithm(OpenCageBatchGeocode(self.api_key, self.region))
 
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
@@ -113,11 +120,12 @@ class OpenCageProvider(QgsProcessingProvider):
         """
         return self.name()
 
-    def set_config(self, api_key):
+    def set_config(self, api_key, region):
         """
         Sets the api key
         """
         self.api_key = api_key
+        self.region = region
         self.refreshAlgorithms()
 
     def tr(self, string, context=''):
