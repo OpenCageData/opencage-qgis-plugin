@@ -36,13 +36,15 @@ from qgis.core import QgsProcessingProvider
 from .forward import ForwardGeocode
 
 from opencage_geocoder.gui.gui_utils import GuiUtils
+import logging
+logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 class OpenCageProvider(QgsProcessingProvider):
 
     def __init__(self):
+        super().__init__()
         self.api_key = None
-        QgsProcessingProvider.__init__(self)
-        #QgsBatchGeocodeAlgorithm.__init__(self, self.coder)
+        logging.debug("START*****************")
 
     def unload(self):
         """
@@ -54,8 +56,9 @@ class OpenCageProvider(QgsProcessingProvider):
     def loadAlgorithms(self):
         """
         Loads all algorithms belonging to this provider.
-        """
+        """     
         self.addAlgorithm(ForwardGeocode())
+
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 
@@ -115,7 +118,7 @@ class OpenCageProvider(QgsProcessingProvider):
         Sets the api key
         """
         self.api_key = api_key
-        #self.refreshAlgorithms()
+        self.refreshAlgorithms()
 
     def tr(self, string, context=''):
         """

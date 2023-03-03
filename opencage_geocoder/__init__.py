@@ -49,8 +49,6 @@ from qgis.gui import (
     QgsOptionsWidgetFactory
 )
 
-#import logging
-#logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 from opencage_geocoder.gui_utils import GuiUtils
 from opencage_geocoder.processing.provider import OpenCageProvider

@@ -30,14 +30,25 @@ __copyright__ = '(C) 2023 by opencage'
 
 __revision__ = '$Format:%H$'
 
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QVariant
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
+                       QgsSettings,
+                       QgsField,
+                       QgsFields,
+                       QgsWkbTypes,
+                       QgsCoordinateReferenceSystem,
+                       QgsFeature,
+                       QgsPoint,
                        QgsProcessingParameterFeatureSink)
 
-from ..python_opencage_geocoder.opencage.geocoder import OpenCageGeocode
+from .geocoder import OpenCageGeocode
+from qgis.analysis import QgsBatchGeocodeAlgorithm
+
+import logging
+logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 class ForwardGeocode(QgsProcessingAlgorithm):
     """
@@ -57,8 +68,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
-    OUTPUT = 'OUTPUT'
-    INPUT = 'INPUT'
+    OUTPUT = 'Geocoded'
+    INPUT = 'Input Layer'
 
     def initAlgorithm(self, config):
         """
@@ -68,11 +79,12 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         # We add the input vector features source. It can have any kind of
         # geometry.
+
         self.addParameter(
             QgsProcessingParameterFeatureSource(
                 self.INPUT,
                 self.tr('Input layer'),
-                [QgsProcessing.TypeVectorAnyGeometry]
+                [QgsProcessing.TypeFile]
             )
         )
 
@@ -91,12 +103,25 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         Here is where the processing itself takes place.
         """
 
+        settings = QgsSettings()
+        self.api_key = settings.value('/plugins/opencage/api_key', '', str)
+
+        geocoder = OpenCageGeocode(self.api_key)
+        # logging.debug(geocoder)
+
         # Retrieve the feature source and sink. The 'dest_id' variable is used
         # to uniquely identify the feature sink, and must be included in the
         # dictionary returned by the processAlgorithm function.
         source = self.parameterAsSource(parameters, self.INPUT, context)
+
+        # Init attributes - later we'll allow this to be defined by the user
+        formated_address = QgsField('formatted', QVariant.String)
+        fieldList= QgsFields()
+        fieldList.append(formated_address)
+        crs = QgsCoordinateReferenceSystem("EPSG:4326")
+
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-                context, source.fields(), source.wkbType(), source.sourceCrs())
+                context, fieldList, QgsWkbTypes.Point , crs)
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
@@ -108,8 +133,19 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             if feedback.isCanceled():
                 break
 
+            # Retrieve the geometry and address (later we can let user decide which fields to include)
+            d = feature.attribute(feature.fieldNameIndex("Morada"))
+            result = geocoder.geocode(d, no_annotations=1, language='es')
+            logging.debug(result[0]['formatted'])
+            logging.debug(result[0]['geometry'])
+
             # Add a feature in the sink
-            sink.addFeature(feature, QgsFeatureSink.FastInsert)
+            new_feature= QgsFeature()
+            new_feature.setFields(fieldList)
+            new_feature.setGeometry( QgsPoint( result[0]['geometry']['lng'], result[0]['geometry']['lat'] ) )
+            new_feature.setAttribute('formatted', result[0]['formatted'])
+
+            sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 
             # Update the progress bar
             feedback.setProgress(int(current * total))
