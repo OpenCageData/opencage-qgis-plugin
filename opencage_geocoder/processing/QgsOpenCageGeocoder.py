@@ -75,6 +75,9 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
                     # logging.debug("field name: {}".format(f))
                     # logging.debug("field value: {}".format(json[0]['components'][f]))
                     new_feature.setAttribute(f, json[0]['components'][f])
+            feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
+
+            feedback.pushInfo("Could not geocode {}".format(str))
             return new_feature
         return None
 

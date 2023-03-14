@@ -35,6 +35,7 @@ from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
+                       QgsProcessingParameterField,
                        QgsSettings,
                        QgsField,
                        QgsFields,
@@ -71,6 +72,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
     OUTPUT = 'Geocoded'
     INPUT = 'Input Layer'
+    FIELD = 'FIELD'
 
     def initAlgorithm(self, config):
         """
@@ -89,6 +91,16 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             )
         )
 
+        self.addParameter(
+            QgsProcessingParameterField(
+                self.FIELD,
+                self.tr("Address Field"),
+                '',
+                self.INPUT
+            )
+        )
+
+
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
@@ -103,6 +115,13 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         """
         Here is where the processing itself takes place.
         """
+
+        # Grab address field
+        address = self.parameterAsFields(
+            parameters,
+            self.FIELD,
+            context
+        )[0]
 
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
@@ -129,7 +148,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
                 break
 
             # Retrieve the geometry and address (later we can let user decide which fields to include)
-            d = feature.attribute(feature.fieldNameIndex("Morada"))
+            d = feature.attribute(feature.fieldNameIndex(address))
             new_feature = geocoder.forward(d, context, feedback)
             if new_feature:
                 sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
