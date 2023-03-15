@@ -76,6 +76,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     FIELD = 'FIELD'
     ABBRV = 'Abbreviated?'
     NO_ANNOTATIONS = 'No annotations'
+    NO_RECORD = 'No record'
 
     def initAlgorithm(self, config):
         """
@@ -111,6 +112,10 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             self.NO_ANNOTATIONS, self.tr('No annotations?'), defaultValue=True)
         )
 
+        self.addParameter(QgsProcessingParameterBoolean(
+            self.NO_RECORD, self.tr('No record?'), defaultValue=False)
+        )
+
         # no_record=1
         # countrycode
         # bounds
@@ -139,8 +144,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         )[0]
 
         abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
-
         no_annotations = 1 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 0
+        no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) == True else 0
 
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
@@ -168,7 +173,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
             # Retrieve the geometry and address (later we can let user decide which fields to include)
             d = feature.attribute(feature.fieldNameIndex(address))
-            new_feature = geocoder.forward(d, abbreviation, no_annotations, context, feedback)
+            new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, context, feedback)
             if new_feature:
                 sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 

@@ -63,9 +63,9 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def flags():
         return QgsGeocoderInterface.GeocodesStrings
 
-    def forward(self, str, abbrveviation, n_annotations, context, feedback):
-        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations)
-        # logging.debug(n_annotations)
+    def forward(self, str, abbrveviation, n_annotations, n_record, context, feedback):
+        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, no_record=n_record)
+        logging.debug(n_record)
         logging.debug(json)
 
         if json and len(json):

@@ -171,7 +171,7 @@ class OpenCageGeocode:
 
         request = self._parse_request(query, kwargs)
 
-        logging.debug(request)
+        # logging.debug(request)
 
         response = self._opencage_request(request)
 
