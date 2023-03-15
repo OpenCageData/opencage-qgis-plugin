@@ -7,6 +7,8 @@ import collections
 import os
 import requests
 
+import logging
+logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 try:
     import aiohttp
@@ -168,6 +170,9 @@ class OpenCageGeocode:
             raise AioHttpError("Cannot use `geocode` in an async context, use `gecode_async`.")
 
         request = self._parse_request(query, kwargs)
+
+        logging.debug(request)
+
         response = self._opencage_request(request)
 
         return floatify_latlng(response['results'])

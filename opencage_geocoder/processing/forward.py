@@ -36,6 +36,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterField,
+                       QgsProcessingParameterBoolean,
                        QgsSettings,
                        QgsField,
                        QgsFields,
@@ -73,6 +74,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     OUTPUT = 'Geocoded'
     INPUT = 'Input Layer'
     FIELD = 'FIELD'
+    ABBRV = 'Abbreviated?'
 
     def initAlgorithm(self, config):
         """
@@ -100,6 +102,14 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             )
         )
 
+        self.addParameter(QgsProcessingParameterBoolean(
+            self.ABBRV, self.tr('Abbreviated results?'), defaultValue=False)
+        )
+
+        # no_record=1
+        # countrycode
+        # bounds
+        # language
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
@@ -122,6 +132,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             self.FIELD,
             context
         )[0]
+
+        abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
 
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
@@ -149,7 +161,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
             # Retrieve the geometry and address (later we can let user decide which fields to include)
             d = feature.attribute(feature.fieldNameIndex(address))
-            new_feature = geocoder.forward(d, context, feedback)
+            new_feature = geocoder.forward(d, abbreviation, context, feedback)
             if new_feature:
                 sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 

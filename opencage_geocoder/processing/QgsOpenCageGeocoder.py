@@ -60,8 +60,9 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def flags():
         return QgsGeocoderInterface.GeocodesStrings
 
-    def forward(self, str, context, feedback):
-        json = self.geocoder.geocode(str, no_annotations=1)
+    def forward(self, str, abbrveviation, context, feedback):
+        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=1)
+        # logging.debug(abbrveviation)
         # logging.debug(json)
 
         if json and len(json):
@@ -75,10 +76,11 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
                     # logging.debug("field name: {}".format(f))
                     # logging.debug("field value: {}".format(json[0]['components'][f]))
                     new_feature.setAttribute(f, json[0]['components'][f])
+            new_feature.setAttribute('formatted',json[0]['formatted'])
             feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
-
-            feedback.pushInfo("Could not geocode {}".format(str))
             return new_feature
+        
+        feedback.pushWarning("Could not geocode {}".format(str))
         return None
 
     def appendedFields(self):
@@ -94,6 +96,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         fields.append( QgsField("state", QVariant.String ))
         fields.append( QgsField("state_code", QVariant.String ))
         fields.append( QgsField("town", QVariant.String ))
+        fields.append( QgsField("formatted", QVariant.String ))
 
         return fields
 
