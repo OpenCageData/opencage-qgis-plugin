@@ -42,6 +42,8 @@ from qgis.core import (QgsGeocoderInterface,
 from .geocoder import OpenCageGeocode
 from qgis.analysis import QgsBatchGeocodeAlgorithm
 
+import json as jsn
+
 import logging
 logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
@@ -64,18 +66,19 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def forward(self, str, abbrveviation, n_annotations, context, feedback):
         json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations)
         # logging.debug(n_annotations)
-        # logging.debug(json)
+        logging.debug(json)
 
         if json and len(json):
             geom = QgsGeometry.fromPointXY( 
                 QgsPointXY( json[0]['geometry']['lng'], json[0]['geometry']['lat'] ) )
             new_feature= QgsFeature()
 
+            # Adds geometry
             new_feature.setGeometry(geom)
+
             new_feature.setFields(self.appendedFields())
 
             # Adds components
-
             for k,v in json[0]['components'].items():
                 if k in self.fieldList:
                     new_feature.setAttribute(k, v)
@@ -83,12 +86,11 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
             new_feature.setAttribute('formatted',json[0]['formatted'])
 
+            # Adds annotations
             if 'annotations' in json[0]:
-                new_feature.setAttribute('DMS.lat',json[0]['annotations']['DMS']['lat'])
-                new_feature.setAttribute('DMS.lng',json[0]['annotations']['DMS']['lng'])
+                self.setAnnotations(json, new_feature)
 
-
-
+            # Adds formatted string
             new_feature.setAttribute('formatted',json[0]['formatted'])
 
             feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
@@ -96,6 +98,59 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         
         feedback.pushWarning("Could not geocode {}".format(str))
         return None
+
+    def setAnnotations(self, json, feature):
+                feature.setAttribute('DMS.lat',json[0]['annotations']['DMS']['lat'])
+                feature.setAttribute('DMS.lng',json[0]['annotations']['DMS']['lng'])
+                feature.setAttribute('MGRS',json[0]['annotations']['MGRS'])
+                feature.setAttribute('Maidenhead',json[0]['annotations']['Maidenhead'])
+                feature.setAttribute('Mercator.x',json[0]['annotations']['Mercator']['x'])
+                feature.setAttribute('Mercator.y',json[0]['annotations']['Mercator']['y'])
+                if 'NUTS' in json[0]['annotations']:
+                    feature.setAttribute('NUTS0',json[0]['annotations']['NUTS']['NUTS0']['code'])
+                    feature.setAttribute('NUTS1',json[0]['annotations']['NUTS']['NUTS1']['code'])
+                    feature.setAttribute('NUTS2',json[0]['annotations']['NUTS']['NUTS2']['code'])
+                    feature.setAttribute('NUTS3',json[0]['annotations']['NUTS']['NUTS3']['code'])
+                if 'OSM' in json[0]['annotations']: 
+                    feature.setAttribute('OSM.note_url',json[0]['annotations']['OSM']['note_url'])
+                    feature.setAttribute('OSM.url',json[0]['annotations']['OSM']['url'])
+                if 'UN_M49' in json[0]['annotations']: 
+                    feature.setAttribute('UN_M49.regions',jsn.dumps(json[0]['annotations']['UN_M49']['regions']))
+                    feature.setAttribute('UN_M49.statistical_groupings',jsn.dumps(json[0]['annotations']['UN_M49']['statistical_groupings']))
+                feature.setAttribute('callingcode',json[0]['annotations']['callingcode'])
+                if 'currency' in json[0]['annotations']: 
+                    if 'alternate_symbols' in json[0]['annotations']['currency']: 
+                        feature.setAttribute('currency.alternate_symbols',jsn.dumps(json[0]['annotations']['currency']['alternate_symbols']))
+                    feature.setAttribute('currency.decimal_mark',json[0]['annotations']['currency']['decimal_mark'])
+                    feature.setAttribute('currency.iso_code',json[0]['annotations']['currency']['iso_code'])
+                    feature.setAttribute('currency.iso_numeric',json[0]['annotations']['currency']['iso_numeric'])
+                    feature.setAttribute('currency.name',json[0]['annotations']['currency']['name'])
+                    feature.setAttribute('currency.smallest_denomination',json[0]['annotations']['currency']['smallest_denomination'])
+                    feature.setAttribute('currency.subunit',json[0]['annotations']['currency']['subunit'])
+                    feature.setAttribute('currency.subunit_to_unit',json[0]['annotations']['currency']['subunit_to_unit'])
+                    feature.setAttribute('currency.symbol',json[0]['annotations']['currency']['symbol'])
+                    feature.setAttribute('currency.symbol_first',json[0]['annotations']['currency']['symbol_first'])
+                    feature.setAttribute('currency.thousands_separator',json[0]['annotations']['currency']['thousands_separator'])
+                feature.setAttribute('flag',json[0]['annotations']['flag'])
+                feature.setAttribute('geohash',json[0]['annotations']['geohash'])
+                feature.setAttribute('qibla',json[0]['annotations']['qibla'])
+                feature.setAttribute('roadinfo.drive_on',json[0]['annotations']['roadinfo']['drive_on'])
+                feature.setAttribute('roadinfo.speed_in',json[0]['annotations']['roadinfo']['speed_in'])
+                feature.setAttribute('sun.rise.apparent',json[0]['annotations']['sun']['rise']['apparent'])
+                feature.setAttribute('sun.rise.astronomical',json[0]['annotations']['sun']['rise']['astronomical'])
+                feature.setAttribute('sun.rise.civil',json[0]['annotations']['sun']['rise']['civil'])
+                feature.setAttribute('sun.rise.nautical',json[0]['annotations']['sun']['rise']['nautical'])
+                feature.setAttribute('sun.set.apparent',json[0]['annotations']['sun']['set']['apparent'])
+                feature.setAttribute('sun.set.astronomical',json[0]['annotations']['sun']['set']['astronomical'])
+                feature.setAttribute('sun.set.civil',json[0]['annotations']['sun']['set']['civil'])
+                feature.setAttribute('sun.set.nautical',json[0]['annotations']['sun']['set']['nautical'])
+                feature.setAttribute('timezone.name',json[0]['annotations']['timezone']['name'])
+                feature.setAttribute('timezone.now_in_dst',json[0]['annotations']['timezone']['now_in_dst'])
+                feature.setAttribute('timezone.offset_sec',json[0]['annotations']['timezone']['offset_sec'])
+                feature.setAttribute('timezone.offset_string',json[0]['annotations']['timezone']['offset_string'])
+                feature.setAttribute('timezone.short_name',json[0]['annotations']['timezone']['short_name'])
+                feature.setAttribute('what3words',json[0]['annotations']['what3words']['words'])
+
 
     def setFields(self, no_annotations):
 
@@ -118,6 +173,50 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         if (no_annotations == False):
             fieldList["DMS.lat"] = ""
             fieldList["DMS.lng"] = ""
+            fieldList["MGRS"] = ""
+            fieldList["Maidenhead"] = ""
+            fieldList["Mercator.x"] = ""
+            fieldList["Mercator.y"] = ""
+            fieldList["NUTS0"] = ""
+            fieldList["NUTS1"] = ""
+            fieldList["NUTS2"] = ""
+            fieldList["NUTS3"] = ""
+            fieldList["OSM.note_url"] = ""
+            fieldList["OSM.url"] = ""
+            fieldList["UN_M49.regions"] = ""
+            fieldList["UN_M49.statistical_groupings"] = ""
+            fieldList["callingcode"] = ""
+            fieldList["currency.alternate_symbols"] = ""
+            fieldList["currency.decimal_mark"] = ""
+            fieldList["currency.html_entity"] = ""
+            fieldList["currency.iso_code"] = ""
+            fieldList["currency.iso_numeric"] = ""
+            fieldList["currency.name"] = ""
+            fieldList["currency.smallest_denomination"] = ""
+            fieldList["currency.subunit"] = ""
+            fieldList["currency.subunit_to_unit"] = ""
+            fieldList["currency.symbol"] = ""
+            fieldList["currency.symbol_first"] = ""
+            fieldList["currency.thousands_separator"] = ""
+            fieldList["flag"] = ""
+            fieldList["geohash"] = ""
+            fieldList["qibla"] = ""
+            fieldList["roadinfo.drive_on"] = ""
+            fieldList["roadinfo.speed_in"] = ""
+            fieldList["sun.rise.apparent"] = ""
+            fieldList["sun.rise.astronomical"] = ""
+            fieldList["sun.rise.civil"] = ""
+            fieldList["sun.rise.nautical"] = ""
+            fieldList["sun.set.apparent"] = ""
+            fieldList["sun.set.astronomical"] = ""
+            fieldList["sun.set.civil"] = ""
+            fieldList["sun.set.nautical"] = ""
+            fieldList["timezone.name"] = ""
+            fieldList["timezone.now_in_dst"] = ""
+            fieldList["timezone.offset_sec"] = ""
+            fieldList["timezone.offset_string"] = ""
+            fieldList["timezone.short_name"] = ""
+            fieldList["what3words"] = ""
 
         return fieldList
 
