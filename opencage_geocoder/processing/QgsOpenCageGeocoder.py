@@ -47,11 +47,12 @@ logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=loggin
 
 class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
-    def __init__(self, api_key, region):
+    def __init__(self, api_key, region, no_annotations):
         self.api_key = api_key
         self.region = region
         self.endpoint = 'https://api.opencagedata.com/geocode/v1/json'
         self.geocoder = OpenCageGeocode(self.api_key)
+        self.fieldList = self.setFields(no_annotations)
         QgsGeocoderInterface.__init__(self)
 
     def apiKey(self):
@@ -60,44 +61,76 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def flags():
         return QgsGeocoderInterface.GeocodesStrings
 
-    def forward(self, str, abbrveviation, context, feedback):
-        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=1)
-        # logging.debug(abbrveviation)
+    def forward(self, str, abbrveviation, n_annotations, context, feedback):
+        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations)
+        # logging.debug(n_annotations)
         # logging.debug(json)
 
         if json and len(json):
             geom = QgsGeometry.fromPointXY( 
                 QgsPointXY( json[0]['geometry']['lng'], json[0]['geometry']['lat'] ) )
             new_feature= QgsFeature()
-            new_feature.setFields(self.appendedFields())
+
             new_feature.setGeometry(geom)
-            for f in self.appendedFields().names():
-                if f in json[0]['components']:
-                    # logging.debug("field name: {}".format(f))
-                    # logging.debug("field value: {}".format(json[0]['components'][f]))
-                    new_feature.setAttribute(f, json[0]['components'][f])
+            new_feature.setFields(self.appendedFields())
+
+            # Adds components
+
+            for k,v in json[0]['components'].items():
+                if k in self.fieldList:
+                    new_feature.setAttribute(k, v)
+                    logging.debug(k,v)
+
             new_feature.setAttribute('formatted',json[0]['formatted'])
+
+            if 'annotations' in json[0]:
+                new_feature.setAttribute('DMS.lat',json[0]['annotations']['DMS']['lat'])
+                new_feature.setAttribute('DMS.lng',json[0]['annotations']['DMS']['lng'])
+
+
+
+            new_feature.setAttribute('formatted',json[0]['formatted'])
+
             feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
             return new_feature
         
         feedback.pushWarning("Could not geocode {}".format(str))
         return None
 
-    def appendedFields(self):
-        fields=QgsFields();
-        fields.append( QgsField("ISO_3166-1_alpha-2", QVariant.String ))
-        fields.append( QgsField("ISO_3166-1_alpha-3", QVariant.String ))
-        fields.append( QgsField("_category", QVariant.String ))
-        fields.append( QgsField("_type", QVariant.String ))        
-        fields.append( QgsField("continent", QVariant.String ))  
-        fields.append( QgsField("country", QVariant.String ))
-        fields.append( QgsField("country_code", QVariant.String ))
-        fields.append( QgsField("county", QVariant.String ))
-        fields.append( QgsField("state", QVariant.String ))
-        fields.append( QgsField("state_code", QVariant.String ))
-        fields.append( QgsField("town", QVariant.String ))
-        fields.append( QgsField("formatted", QVariant.String ))
+    def setFields(self, no_annotations):
 
+        logging.debug("SET FIELDS")
+
+        fieldList = {
+        "ISO_3166-1_alpha-2": "",
+        "ISO_3166-1_alpha-3": "",
+        "_category": "",
+        "_type": "",
+        "continent": "",
+        "country": "",
+        "country_code": "",
+        "state": "",
+        "state_code": "",
+        "town": "",
+        "formatted": "",
+        }
+
+        if (no_annotations == False):
+            fieldList["DMS.lat"] = ""
+            fieldList["DMS.lng"] = ""
+
+        return fieldList
+
+    def appendedFields(self):
+
+        logging.debug("Field List")
+        logging.debug(self.fieldList)
+
+        fields=QgsFields();
+
+        for key in self.fieldList:
+            fields.append( QgsField(key, QVariant.String ))
+        
         return fields
 
     def geocodeString(self, str, context, feedback):
