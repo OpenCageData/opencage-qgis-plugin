@@ -49,9 +49,8 @@ logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=loggin
 
 class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
-    def __init__(self, api_key, region, no_annotations):
+    def __init__(self, api_key, no_annotations):
         self.api_key = api_key
-        self.region = region
         self.endpoint = 'https://api.opencagedata.com/geocode/v1/json'
         self.geocoder = OpenCageGeocode(self.api_key)
         self.fieldList = self.setFields(no_annotations)
@@ -63,10 +62,10 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def flags():
         return QgsGeocoderInterface.GeocodesStrings
 
-    def forward(self, str, abbrveviation, n_annotations, n_record, context, feedback):
-        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, no_record=n_record)
-        logging.debug(n_record)
-        logging.debug(json)
+    def forward(self, str, abbrveviation, n_annotations, n_record, lang, context, feedback):
+        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, no_record=n_record, language=lang)
+        # logging.debug(n_record)
+        # logging.debug(json)
 
         if json and len(json):
             geom = QgsGeometry.fromPointXY( 
@@ -82,7 +81,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
             for k,v in json[0]['components'].items():
                 if k in self.fieldList:
                     new_feature.setAttribute(k, v)
-                    logging.debug(k,v)
+                    # logging.debug(k,v)
 
             new_feature.setAttribute('formatted',json[0]['formatted'])
 
@@ -154,8 +153,6 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
     def setFields(self, no_annotations):
 
-        logging.debug("SET FIELDS")
-
         fieldList = {
         "ISO_3166-1_alpha-2": "",
         "ISO_3166-1_alpha-3": "",
@@ -221,9 +218,6 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         return fieldList
 
     def appendedFields(self):
-
-        logging.debug("Field List")
-        logging.debug(self.fieldList)
 
         fields=QgsFields();
 

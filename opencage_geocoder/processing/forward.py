@@ -37,6 +37,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterField,
                        QgsProcessingParameterBoolean,
+                       QgsProcessingParameterEnum,
                        QgsSettings,
                        QgsField,
                        QgsFields,
@@ -49,6 +50,8 @@ from qgis.core import (QgsProcessing,
 # from .geocoder import OpenCageGeocode
 # from qgis.analysis import QgsBatchGeocodeAlgorithm
 from .QgsOpenCageGeocoder import QgsOpenCageGeocoder
+
+import csv
 
 import logging
 logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
@@ -77,6 +80,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     ABBRV = 'Abbreviated?'
     NO_ANNOTATIONS = 'No annotations'
     NO_RECORD = 'No record'
+    LANGUAGE = 'Language'
 
     def initAlgorithm(self, config):
         """
@@ -116,9 +120,143 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             self.NO_RECORD, self.tr('No record?'), defaultValue=False)
         )
 
-        # no_record=1
+        # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
+        # (List of common primary language subtags)
+        self.addParameter(
+            QgsProcessingParameterEnum(
+                self.LANGUAGE,
+                self.tr('Favour results in this language'),
+                options=[self.tr('native'),
+                            self.tr("Afrikaans"),
+                            self.tr("Amharic"),
+                            self.tr("Arabic"),
+                            self.tr("Mapudungun"),
+                            self.tr("Assamese"),
+                            self.tr("Azerbaijani"),
+                            self.tr("Bashkir"),
+                            self.tr("Belarusian"),
+                            self.tr("Bulgarian"),
+                            self.tr("Bengali"),
+                            self.tr("Tibetan"),
+                            self.tr("Breton"),
+                            self.tr("Bosnian"),
+                            self.tr("Catalan"),
+                            self.tr("Corsican"),
+                            self.tr("Czech"),
+                            self.tr("Welsh"),
+                            self.tr("Danish"),
+                            self.tr("German"),
+                            self.tr("Lower Sorbian"),
+                            self.tr("Divehi"),
+                            self.tr("Greek"),
+                            self.tr("English"),
+                            self.tr("Spanish"),
+                            self.tr("Estonian"),
+                            self.tr("Basque"),
+                            self.tr("Persian"),
+                            self.tr("Finnish"),
+                            self.tr("Filipino"),
+                            self.tr("Faroese"),
+                            self.tr("French"),
+                            self.tr("Frisian"),
+                            self.tr("Irish"),
+                            self.tr("Scottish Gaelic"),
+                            self.tr("Galician"),
+                            self.tr("Alsatian"),
+                            self.tr("Gujarati"),
+                            self.tr("Hausa"),
+                            self.tr("Hebrew"),
+                            self.tr("Hindi"),
+                            self.tr("Croatian"),
+                            self.tr("Upper Sorbian"),
+                            self.tr("Hungarian"),
+                            self.tr("Armenian"),
+                            self.tr("Indonesian"),
+                            self.tr("Igbo"),
+                            self.tr("Yi"),
+                            self.tr("Icelandic"),
+                            self.tr("Italian"),
+                            self.tr("Inuktitut"),
+                            self.tr("Japanese"),
+                            self.tr("Georgian"),
+                            self.tr("Kazakh"),
+                            self.tr("Greenlandic"),
+                            self.tr("Khmer"),
+                            self.tr("Kannada"),
+                            self.tr("Korean"),
+                            self.tr("Konkani"),
+                            self.tr("Kyrgyz"),
+                            self.tr("Luxembourgish"),
+                            self.tr("Lao"),
+                            self.tr("Lithuanian"),
+                            self.tr("Latvian"),
+                            self.tr("Maori"),
+                            self.tr("Macedonian"),
+                            self.tr("Malayalam"),
+                            self.tr("Mongolian"),
+                            self.tr("Mohawk"),
+                            self.tr("Marathi"),
+                            self.tr("Malay"),
+                            self.tr("Maltese"),
+                            self.tr("Burmese"),
+                            self.tr("Norwegian (Bokmål)"),
+                            self.tr("Nepali"),
+                            self.tr("Dutch"),
+                            self.tr("Norwegian (Nynorsk)"),
+                            self.tr("Norwegian"),
+                            self.tr("Sesotho"),
+                            self.tr("Occitan"),
+                            self.tr("Odia"),
+                            self.tr("Punjabi"),
+                            self.tr("Polish"),
+                            self.tr("Dari"),
+                            self.tr("Pashto"),
+                            self.tr("Portuguese"),
+                            self.tr("K'iche"),
+                            self.tr("Quechua"),
+                            self.tr("Romansh"),
+                            self.tr("Romanian"),
+                            self.tr("Russian"),
+                            self.tr("Kinyarwanda"),
+                            self.tr("Sanskrit"),
+                            self.tr("Yakut"),
+                            self.tr("Sami (Northern)"),
+                            self.tr("Sinhala"),
+                            self.tr("Slovak"),
+                            self.tr("Slovenian"),
+                            self.tr("Sami (Southern)"),
+                            self.tr("Sami (Lule)"),
+                            self.tr("Sami (Inari)"),
+                            self.tr("Sami (Skolt)"),
+                            self.tr("Albanian"),
+                            self.tr("Serbian"),
+                            self.tr("Swedish"),
+                            self.tr("Kiswahili"),
+                            self.tr("Syriac"),
+                            self.tr("Tamil"),
+                            self.tr("Telugu"),
+                            self.tr("Tajik"),
+                            self.tr("Thai"),
+                            self.tr("Turkmen"),
+                            self.tr("Tswana"),
+                            self.tr("Turkish"),
+                            self.tr("Tatar"),
+                            self.tr("Tamazight"),
+                            self.tr("Uyghur"),
+                            self.tr("Ukrainian"),
+                            self.tr("Urdu"),
+                            self.tr("Uzbek"),
+                            self.tr("Vietnamese"),
+                            self.tr("Wolof"),
+                            self.tr("Xhosa"),
+                            self.tr("Yoruba"),
+                            self.tr("Chinese"),
+                            self.tr("Zulu")
+                         ],
+                defaultValue=0,
+                optional=False)
+        )
         # countrycode
-        # bounds
         # language
 
         # We add a feature sink in which to store our processed features (this
@@ -147,10 +285,14 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         no_annotations = 1 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 0
         no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) == True else 0
 
+        lang_idx= self.parameterAsInt(parameters, self.LANGUAGE, context)
+
+        language = self.parseLanguage(lang_idx)
+
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
 
-        geocoder = QgsOpenCageGeocoder(self.api_key, 'pt', no_annotations)
+        geocoder = QgsOpenCageGeocoder(self.api_key, no_annotations)
 
         # Retrieve the feature source and sink. The 'dest_id' variable is used
         # to uniquely identify the feature sink, and must be included in the
@@ -173,7 +315,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
             # Retrieve the geometry and address (later we can let user decide which fields to include)
             d = feature.attribute(feature.fieldNameIndex(address))
-            new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, context, feedback)
+            new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, language, context, feedback)
             if new_feature:
                 sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 
@@ -187,6 +329,140 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         # dictionary, with keys matching the feature corresponding parameter
         # or output names.
         return {self.OUTPUT: dest_id}
+
+    def parseLanguage(self, lang):
+
+        SubCodes= [
+                    "native",
+                    "af",
+                    "am",
+                    "ar",
+                    "arn",
+                    "as",
+                    "az",
+                    "ba",
+                    "be",
+                    "bg",
+                    "bn",
+                    "bo",
+                    "br",
+                    "bs",
+                    "ca",
+                    "co",
+                    "cs",
+                    "cy",
+                    "da",
+                    "de",
+                    "dsb",
+                    "dv",
+                    "el",
+                    "en",
+                    "es",
+                    "et",
+                    "eu",
+                    "fa",
+                    "fi",
+                    "fil",
+                    "fo",
+                    "fr",
+                    "fy",
+                    "ga",
+                    "gd",
+                    "gl",
+                    "gsw",
+                    "gu",
+                    "ha",
+                    "he",
+                    "hi",
+                    "hr",
+                    "hsb",
+                    "hu",
+                    "hy",
+                    "id",
+                    "ig",
+                    "ii",
+                    "is",
+                    "it",
+                    "iu",
+                    "ja",
+                    "ka",
+                    "kk",
+                    "kl",
+                    "km",
+                    "kn",
+                    "ko",
+                    "kok",
+                    "ky",
+                    "lb",
+                    "lo",
+                    "lt",
+                    "lv",
+                    "mi",
+                    "mk",
+                    "ml",
+                    "mn",
+                    "moh",
+                    "mr",
+                    "ms",
+                    "mt",
+                    "my",
+                    "nb",
+                    "ne",
+                    "nl",
+                    "nn",
+                    "no",
+                    "st",
+                    "oc",
+                    "or",
+                    "pa",
+                    "pl",
+                    "prs",
+                    "ps",
+                    "pt",
+                    "quc",
+                    "qu",
+                    "rm",
+                    "ro",
+                    "ru",
+                    "rw",
+                    "sa",
+                    "sah",
+                    "se",
+                    "si",
+                    "sk",
+                    "sl",
+                    "sma",
+                    "smj",
+                    "smn",
+                    "sms",
+                    "sq",
+                    "sr",
+                    "sv",
+                    "sw",
+                    "syc",
+                    "ta",
+                    "te",
+                    "tg",
+                    "th",
+                    "tk",
+                    "tn",
+                    "tr",
+                    "tt",
+                    "tzm",
+                    "ug",
+                    "uk",
+                    "ur",
+                    "uz",
+                    "vi",
+                    "wo",
+                    "xh",
+                    "yo",
+                    "zh",
+                    "zu",
+        ]
+
+        return SubCodes[lang]
+
 
     def name(self):
         """
