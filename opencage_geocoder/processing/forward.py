@@ -135,6 +135,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
                 self.tr('Bounds: restrict the possible results to a defined bounding box'),
                 optional=True)
 
+        # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
+        # (List of common primary language subtags)
         countryPar = QgsProcessingParameterEnum(
                 self.COUNTRY,
                 self.tr('Restricts results to the specified country/territory or countries'),
@@ -142,7 +144,16 @@ class ForwardGeocode(QgsProcessingAlgorithm):
                 allowMultiple = True,
                 defaultValue=None,
                 optional=True)
-
+        
+        # Country names from here: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+        # (ISO 3166-1 alpha-2)
+        langPar = QgsProcessingParameterEnum(
+                self.LANGUAGE,
+                self.tr('Format results in this language, if possible'),
+                options=self.getLanguageStrings(),
+                defaultValue=0,
+                optional=False)
+        
         abbrvPar.setFlags(abbrvPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(abbrvPar)
 
@@ -158,16 +169,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         countryPar.setFlags(countryPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(countryPar)
 
-        # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
-        # (List of common primary language subtags)
-        self.addParameter(
-            QgsProcessingParameterEnum(
-                self.LANGUAGE,
-                self.tr('Format results in this language, if possible'),
-                options=self.getLanguageStrings(),
-                defaultValue=0,
-                optional=False)
-        )
+        langPar.setFlags(langPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(langPar)
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
