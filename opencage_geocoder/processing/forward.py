@@ -45,6 +45,7 @@ from qgis.core import (QgsProcessing,
                        QgsCoordinateReferenceSystem,
                        QgsFeature,
                        QgsPoint,
+                       QgsProcessingParameterDefinition,
                        QgsProcessingParameterFeatureSink)
 
 # from .geocoder import OpenCageGeocode
@@ -112,17 +113,24 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             )
         )
 
-        self.addParameter(QgsProcessingParameterBoolean(
+        # Set advanced parameters
+        abbrvPar = QgsProcessingParameterBoolean(
             self.ABBRV, self.tr('Abbreviated results?'), defaultValue=False)
-        )
-
-        self.addParameter(QgsProcessingParameterBoolean(
+        
+        noAnnotationsPar = QgsProcessingParameterBoolean(
             self.NO_ANNOTATIONS, self.tr('No annotations?'), defaultValue=True)
-        )
-
-        self.addParameter(QgsProcessingParameterBoolean(
+    
+        noRecordPar = QgsProcessingParameterBoolean(
             self.NO_RECORD, self.tr('No record?'), defaultValue=False)
-        )
+
+        abbrvPar.setFlags(abbrvPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(abbrvPar)
+
+        noAnnotationsPar.setFlags(noAnnotationsPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(noAnnotationsPar)
+    
+        noRecordPar.setFlags(noRecordPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(noRecordPar)
 
         # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
         # (List of common primary language subtags)
