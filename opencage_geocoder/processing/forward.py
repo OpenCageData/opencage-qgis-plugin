@@ -117,13 +117,13 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         # Set advanced parameters
         abbrvPar = QgsProcessingParameterBoolean(
-            self.ABBRV, self.tr('Abbreviated results?'), defaultValue=False)
+            self.ABBRV, self.tr('Attempt to abbreviate and shorten the returned address (on the "formatted" field)'), defaultValue=False)
         
         noAnnotationsPar = QgsProcessingParameterBoolean(
-            self.NO_ANNOTATIONS, self.tr('No annotations?'), defaultValue=True)
+            self.NO_ANNOTATIONS, self.tr('Additional information about the result location (e.g.: extra fields). Switch off for faster response!'), defaultValue=False)
     
         noRecordPar = QgsProcessingParameterBoolean(
-            self.NO_RECORD, self.tr('No record?'), defaultValue=False)
+            self.NO_RECORD, self.tr('Privacy mode: do not log query contents. It may limit customer support.'), defaultValue=False)
 
         abbrvPar.setFlags(abbrvPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(abbrvPar)
@@ -170,7 +170,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         )[0]
 
         abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
-        no_annotations = 1 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 0
+        no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 1
         no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) == True else 0
 
         lang_idx= self.parameterAsInt(parameters, self.LANGUAGE, context)
