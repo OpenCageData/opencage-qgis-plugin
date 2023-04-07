@@ -65,6 +65,8 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def forward(self, str, abbrveviation, n_annotations, n_record, lang, extent, countries, context, feedback):
 
         formatted_bounds = '{},{},{},{}'.format(extent.xMinimum(),extent.yMinimum(),extent.xMaximum(),extent.yMaximum())
+        # logging.debug("EXTENT: {}".format(formatted_bounds))
+
         json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, 
                                      no_record=n_record, language=lang,
                                      countrycode=countries, bounds=formatted_bounds)
