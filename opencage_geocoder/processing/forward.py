@@ -97,6 +97,10 @@ class ForwardGeocode(QgsProcessingAlgorithm):
                 self.tr('Input layer'),
                 [QgsProcessing.TypeFile]
             )
+            # ,
+            # help_text=self.tr(
+            #     'File with addresses that you want to geocode.'
+            # ),
         )
 
         self.addParameter(
@@ -504,3 +508,18 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
     def createInstance(self):
         return ForwardGeocode()
+
+    def shortHelpString(self):
+        """
+        Returns a localised short help string for the algorithm.
+        """
+        return self.tr('Geocoder')
+    
+    def helpString(self):
+        """
+        Returns a localised help string for the algorithm.
+        """
+        return self.tr('Geocoding addresses')
+    
+    def helpUrl(self):
+            return "https://opencagedata.com/api"
