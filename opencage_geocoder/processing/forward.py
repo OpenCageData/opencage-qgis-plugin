@@ -46,6 +46,7 @@ from qgis.core import (QgsProcessing,
                        QgsFeature,
                        QgsPoint,
                        QgsProcessingParameterDefinition,
+                       QgsProcessingException,
                        QgsProcessingParameterFeatureSink)
 
 # from .geocoder import OpenCageGeocode
@@ -196,27 +197,27 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         total = 100.0 / source.featureCount() if source.featureCount() else 0
         features = source.getFeatures()
 
-        for current, feature in enumerate(features):
-            # Stop the algorithm if cancel button has been clicked
-            if feedback.isCanceled():
-                break
+        try:
 
-            # Retrieve the geometry and address (later we can let user decide which fields to include)
-            d = feature.attribute(feature.fieldNameIndex(address))
-            new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, language, context, feedback)
-            if new_feature:
-                sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
+            for current, feature in enumerate(features):
+                # Stop the algorithm if cancel button has been clicked
+                if feedback.isCanceled():
+                    break
 
-            # Update the progress bar
-            feedback.setProgress(int(current * total))
+                # Retrieve the geometry and address (later we can let user decide which fields to include)
+                d = feature.attribute(feature.fieldNameIndex(address))
+                new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, language, context, feedback)
+                if new_feature:
+                    sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 
-        # Return the results of the algorithm. In this case our only result is
-        # the feature sink which contains the processed features, but some
-        # algorithms may return multiple feature sinks, calculated numeric
-        # statistics, etc. These should all be included in the returned
-        # dictionary, with keys matching the feature corresponding parameter
-        # or output names.
-        return {self.OUTPUT: dest_id}
+                # Update the progress bar
+                feedback.setProgress(int(current * total))
+
+            return {self.OUTPUT: dest_id}
+    
+        except Exception as e:
+            feedback.reportError("Error: {}".format(e), True)
+            raise QgsProcessingException
 
     def name(self):
         """

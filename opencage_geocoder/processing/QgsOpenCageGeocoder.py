@@ -63,6 +63,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         return QgsGeocoderInterface.GeocodesStrings
 
     def forward(self, str, abbrveviation, n_annotations, n_record, lang, context, feedback):
+
         json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, no_record=n_record, language=lang)
         # logging.debug(n_record)
         # logging.debug(json)
@@ -97,6 +98,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         
         feedback.pushWarning("Could not geocode {}".format(str))
         return None
+
 
     def setAnnotations(self, json, feature):
                 feature.setAttribute('DMS.lat',json[0]['annotations']['DMS']['lat'])

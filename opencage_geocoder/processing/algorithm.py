@@ -20,14 +20,14 @@ logging.basicConfig(filename='/tmp/opencage1.log', encoding='utf-8', level=loggi
 class OpenCageBatchGeocode(QgsBatchGeocodeAlgorithm):
 
     def __init__(self, api_key, region):
-        logging.debug("Init OpenCageBatchGeocode")
+        # logging.debug("Init OpenCageBatchGeocode")
         self.api_key = api_key
         self.region = region
         self.coder = QgsOpenCageGeocoder(api_key, self.region)
-        logging.debug(self.coder)
-        logging.debug("Init QgsBatchGeocodeAlgorithm")
+        # logging.debug(self.coder)
+        # logging.debug("Init QgsBatchGeocodeAlgorithm")
         QgsBatchGeocodeAlgorithm.__init__(self, self.coder)
-        logging.debug("OpenCageBatchGeocode Ok")
+        # logging.debug("OpenCageBatchGeocode Ok")
 
     def groupId(self):
         return None
