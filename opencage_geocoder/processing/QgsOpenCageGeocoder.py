@@ -62,10 +62,10 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def flags():
         return QgsGeocoderInterface.GeocodesStrings
 
-    def forward(self, str, abbrveviation, n_annotations, n_record, lang, context, feedback):
+    def forward(self, str, abbrveviation, n_annotations, n_record, lang, extent, context, feedback):
 
-        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, no_record=n_record, language=lang)
-        # logging.debug(n_record)
+        formatted_bounds = '{},{},{},{}'.format(extent.xMinimum(),extent.yMinimum(),extent.xMaximum(),extent.yMaximum())
+        json = self.geocoder.geocode(str, abbrv=abbrveviation, no_annotations=n_annotations, no_record=n_record, language=lang, bounds=formatted_bounds)
         # logging.debug(json)
 
         if json and len(json):

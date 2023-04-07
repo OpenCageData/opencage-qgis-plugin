@@ -47,6 +47,7 @@ from qgis.core import (QgsProcessing,
                        QgsPoint,
                        QgsProcessingParameterDefinition,
                        QgsProcessingException,
+                       QgsProcessingParameterExtent,
                        QgsProcessingParameterFeatureSink)
 
 # from .geocoder import OpenCageGeocode
@@ -83,6 +84,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     NO_ANNOTATIONS = 'No annotations'
     NO_RECORD = 'No record'
     LANGUAGE = 'Language'
+    BOUNDS = 'bounds'
 
     def initAlgorithm(self, config):
         """
@@ -126,6 +128,10 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         noRecordPar = QgsProcessingParameterBoolean(
             self.NO_RECORD, self.tr('Privacy mode: do not log query contents. It may limit customer support.'), defaultValue=False)
 
+        extentPar = QgsProcessingParameterExtent(
+                self.BOUNDS, 
+                self.tr('Bounds: restrict the possible results to a defined bounding box'))
+
         abbrvPar.setFlags(abbrvPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(abbrvPar)
 
@@ -134,6 +140,9 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     
         noRecordPar.setFlags(noRecordPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noRecordPar)
+
+        extentPar.setFlags(extentPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(extentPar)
 
         # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
         # (List of common primary language subtags)
@@ -145,8 +154,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
                 defaultValue=0,
                 optional=False)
         )
-        # countrycode
-        # language
+
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
@@ -178,6 +186,10 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         language = self.parseLanguage(lang_idx)
 
+        crs = QgsCoordinateReferenceSystem("EPSG:4326")
+        extent = self.parameterAsExtent(parameters, self.BOUNDS, context, crs)
+        # logging.debug(extent)
+
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
 
@@ -206,7 +218,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
                 # Retrieve the geometry and address (later we can let user decide which fields to include)
                 d = feature.attribute(feature.fieldNameIndex(address))
-                new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, language, context, feedback)
+                new_feature = geocoder.forward(d, abbreviation, no_annotations, no_record, language, extent, context, feedback)
                 if new_feature:
                     sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 
