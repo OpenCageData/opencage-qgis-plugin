@@ -89,6 +89,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         with some other properties.
         """
 
+        self.setupLanguages()
+
         # We add the input vector features source. It can have any kind of
         # geometry.
 
@@ -137,134 +139,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterEnum(
                 self.LANGUAGE,
-                self.tr('Favour results in this language'),
-                options=[self.tr('native'),
-                            self.tr("Afrikaans"),
-                            self.tr("Amharic"),
-                            self.tr("Arabic"),
-                            self.tr("Mapudungun"),
-                            self.tr("Assamese"),
-                            self.tr("Azerbaijani"),
-                            self.tr("Bashkir"),
-                            self.tr("Belarusian"),
-                            self.tr("Bulgarian"),
-                            self.tr("Bengali"),
-                            self.tr("Tibetan"),
-                            self.tr("Breton"),
-                            self.tr("Bosnian"),
-                            self.tr("Catalan"),
-                            self.tr("Corsican"),
-                            self.tr("Czech"),
-                            self.tr("Welsh"),
-                            self.tr("Danish"),
-                            self.tr("German"),
-                            self.tr("Lower Sorbian"),
-                            self.tr("Divehi"),
-                            self.tr("Greek"),
-                            self.tr("English"),
-                            self.tr("Spanish"),
-                            self.tr("Estonian"),
-                            self.tr("Basque"),
-                            self.tr("Persian"),
-                            self.tr("Finnish"),
-                            self.tr("Filipino"),
-                            self.tr("Faroese"),
-                            self.tr("French"),
-                            self.tr("Frisian"),
-                            self.tr("Irish"),
-                            self.tr("Scottish Gaelic"),
-                            self.tr("Galician"),
-                            self.tr("Alsatian"),
-                            self.tr("Gujarati"),
-                            self.tr("Hausa"),
-                            self.tr("Hebrew"),
-                            self.tr("Hindi"),
-                            self.tr("Croatian"),
-                            self.tr("Upper Sorbian"),
-                            self.tr("Hungarian"),
-                            self.tr("Armenian"),
-                            self.tr("Indonesian"),
-                            self.tr("Igbo"),
-                            self.tr("Yi"),
-                            self.tr("Icelandic"),
-                            self.tr("Italian"),
-                            self.tr("Inuktitut"),
-                            self.tr("Japanese"),
-                            self.tr("Georgian"),
-                            self.tr("Kazakh"),
-                            self.tr("Greenlandic"),
-                            self.tr("Khmer"),
-                            self.tr("Kannada"),
-                            self.tr("Korean"),
-                            self.tr("Konkani"),
-                            self.tr("Kyrgyz"),
-                            self.tr("Luxembourgish"),
-                            self.tr("Lao"),
-                            self.tr("Lithuanian"),
-                            self.tr("Latvian"),
-                            self.tr("Maori"),
-                            self.tr("Macedonian"),
-                            self.tr("Malayalam"),
-                            self.tr("Mongolian"),
-                            self.tr("Mohawk"),
-                            self.tr("Marathi"),
-                            self.tr("Malay"),
-                            self.tr("Maltese"),
-                            self.tr("Burmese"),
-                            self.tr("Norwegian (Bokmål)"),
-                            self.tr("Nepali"),
-                            self.tr("Dutch"),
-                            self.tr("Norwegian (Nynorsk)"),
-                            self.tr("Norwegian"),
-                            self.tr("Sesotho"),
-                            self.tr("Occitan"),
-                            self.tr("Odia"),
-                            self.tr("Punjabi"),
-                            self.tr("Polish"),
-                            self.tr("Dari"),
-                            self.tr("Pashto"),
-                            self.tr("Portuguese"),
-                            self.tr("K'iche"),
-                            self.tr("Quechua"),
-                            self.tr("Romansh"),
-                            self.tr("Romanian"),
-                            self.tr("Russian"),
-                            self.tr("Kinyarwanda"),
-                            self.tr("Sanskrit"),
-                            self.tr("Yakut"),
-                            self.tr("Sami (Northern)"),
-                            self.tr("Sinhala"),
-                            self.tr("Slovak"),
-                            self.tr("Slovenian"),
-                            self.tr("Sami (Southern)"),
-                            self.tr("Sami (Lule)"),
-                            self.tr("Sami (Inari)"),
-                            self.tr("Sami (Skolt)"),
-                            self.tr("Albanian"),
-                            self.tr("Serbian"),
-                            self.tr("Swedish"),
-                            self.tr("Kiswahili"),
-                            self.tr("Syriac"),
-                            self.tr("Tamil"),
-                            self.tr("Telugu"),
-                            self.tr("Tajik"),
-                            self.tr("Thai"),
-                            self.tr("Turkmen"),
-                            self.tr("Tswana"),
-                            self.tr("Turkish"),
-                            self.tr("Tatar"),
-                            self.tr("Tamazight"),
-                            self.tr("Uyghur"),
-                            self.tr("Ukrainian"),
-                            self.tr("Urdu"),
-                            self.tr("Uzbek"),
-                            self.tr("Vietnamese"),
-                            self.tr("Wolof"),
-                            self.tr("Xhosa"),
-                            self.tr("Yoruba"),
-                            self.tr("Chinese"),
-                            self.tr("Zulu")
-                         ],
+                self.tr('Format results in this language, if possible'),
+                options=self.getLanguageStrings(),
                 defaultValue=0,
                 optional=False)
         )
@@ -341,6 +217,63 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         # dictionary, with keys matching the feature corresponding parameter
         # or output names.
         return {self.OUTPUT: dest_id}
+
+    def name(self):
+        """
+        Returns the algorithm name, used for identifying the algorithm. This
+        string should be fixed for the algorithm, and must not be localised.
+        The name should be unique within each provider. Names should contain
+        lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
+        return 'geocode'
+
+    def displayName(self):
+        """
+        Returns the translated algorithm name, which should be used for any
+        user-visible display of the algorithm name.
+        """
+        return 'Geocode addresses'
+
+    def group(self):
+        """
+        Returns the name of the group this algorithm belongs to. This string
+        should be localised.
+        """
+        # return self.tr(self.groupId())
+        return None
+
+    def groupId(self):
+        """
+        Returns the unique ID of the group this algorithm belongs to. This
+        string should be fixed for the algorithm, and must not be localised.
+        The group id should be unique within each provider. Group id should
+        contain lowercase alphanumeric characters only and no spaces or other
+        formatting characters.
+        """
+        return None
+
+    def tr(self, string):
+        return QCoreApplication.translate('Processing', string)
+
+    def createInstance(self):
+        return ForwardGeocode()
+
+    def shortHelpString(self):
+        """
+        Returns a localised short help string for the algorithm.
+        """
+        return self.tr('Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location tag in human language) to point geometries. This process is also known as <b>forward geocoding</b>. Read more about this topic in the <a href="https://opencagedata.com/faq">OpenCage FAQ</a>.')
+    
+    def helpString(self):
+        """
+        Returns a localised help string for the algorithm.
+        """
+        return self.tr('Geocoding addresses')
+    
+    def helpUrl(self):
+            return "https://opencagedata.com/api"
+    
 
     def parseLanguage(self, lang):
 
@@ -475,59 +408,142 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         return SubCodes[lang]
 
+    def setupLanguages(self):
 
-    def name(self):
-        """
-        Returns the algorithm name, used for identifying the algorithm. This
-        string should be fixed for the algorithm, and must not be localised.
-        The name should be unique within each provider. Names should contain
-        lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
-        return 'geocode'
+        self.languages = [self.tr('native'),
+                            self.tr("Afrikaans"),
+                            self.tr("Amharic"),
+                            self.tr("Arabic"),
+                            self.tr("Mapudungun"),
+                            self.tr("Assamese"),
+                            self.tr("Azerbaijani"),
+                            self.tr("Bashkir"),
+                            self.tr("Belarusian"),
+                            self.tr("Bulgarian"),
+                            self.tr("Bengali"),
+                            self.tr("Tibetan"),
+                            self.tr("Breton"),
+                            self.tr("Bosnian"),
+                            self.tr("Catalan"),
+                            self.tr("Corsican"),
+                            self.tr("Czech"),
+                            self.tr("Welsh"),
+                            self.tr("Danish"),
+                            self.tr("German"),
+                            self.tr("Lower Sorbian"),
+                            self.tr("Divehi"),
+                            self.tr("Greek"),
+                            self.tr("English"),
+                            self.tr("Spanish"),
+                            self.tr("Estonian"),
+                            self.tr("Basque"),
+                            self.tr("Persian"),
+                            self.tr("Finnish"),
+                            self.tr("Filipino"),
+                            self.tr("Faroese"),
+                            self.tr("French"),
+                            self.tr("Frisian"),
+                            self.tr("Irish"),
+                            self.tr("Scottish Gaelic"),
+                            self.tr("Galician"),
+                            self.tr("Alsatian"),
+                            self.tr("Gujarati"),
+                            self.tr("Hausa"),
+                            self.tr("Hebrew"),
+                            self.tr("Hindi"),
+                            self.tr("Croatian"),
+                            self.tr("Upper Sorbian"),
+                            self.tr("Hungarian"),
+                            self.tr("Armenian"),
+                            self.tr("Indonesian"),
+                            self.tr("Igbo"),
+                            self.tr("Yi"),
+                            self.tr("Icelandic"),
+                            self.tr("Italian"),
+                            self.tr("Inuktitut"),
+                            self.tr("Japanese"),
+                            self.tr("Georgian"),
+                            self.tr("Kazakh"),
+                            self.tr("Greenlandic"),
+                            self.tr("Khmer"),
+                            self.tr("Kannada"),
+                            self.tr("Korean"),
+                            self.tr("Konkani"),
+                            self.tr("Kyrgyz"),
+                            self.tr("Luxembourgish"),
+                            self.tr("Lao"),
+                            self.tr("Lithuanian"),
+                            self.tr("Latvian"),
+                            self.tr("Maori"),
+                            self.tr("Macedonian"),
+                            self.tr("Malayalam"),
+                            self.tr("Mongolian"),
+                            self.tr("Mohawk"),
+                            self.tr("Marathi"),
+                            self.tr("Malay"),
+                            self.tr("Maltese"),
+                            self.tr("Burmese"),
+                            self.tr("Norwegian (Bokmål)"),
+                            self.tr("Nepali"),
+                            self.tr("Dutch"),
+                            self.tr("Norwegian (Nynorsk)"),
+                            self.tr("Norwegian"),
+                            self.tr("Sesotho"),
+                            self.tr("Occitan"),
+                            self.tr("Odia"),
+                            self.tr("Punjabi"),
+                            self.tr("Polish"),
+                            self.tr("Dari"),
+                            self.tr("Pashto"),
+                            self.tr("Portuguese"),
+                            self.tr("K'iche"),
+                            self.tr("Quechua"),
+                            self.tr("Romansh"),
+                            self.tr("Romanian"),
+                            self.tr("Russian"),
+                            self.tr("Kinyarwanda"),
+                            self.tr("Sanskrit"),
+                            self.tr("Yakut"),
+                            self.tr("Sami (Northern)"),
+                            self.tr("Sinhala"),
+                            self.tr("Slovak"),
+                            self.tr("Slovenian"),
+                            self.tr("Sami (Southern)"),
+                            self.tr("Sami (Lule)"),
+                            self.tr("Sami (Inari)"),
+                            self.tr("Sami (Skolt)"),
+                            self.tr("Albanian"),
+                            self.tr("Serbian"),
+                            self.tr("Swedish"),
+                            self.tr("Kiswahili"),
+                            self.tr("Syriac"),
+                            self.tr("Tamil"),
+                            self.tr("Telugu"),
+                            self.tr("Tajik"),
+                            self.tr("Thai"),
+                            self.tr("Turkmen"),
+                            self.tr("Tswana"),
+                            self.tr("Turkish"),
+                            self.tr("Tatar"),
+                            self.tr("Tamazight"),
+                            self.tr("Uyghur"),
+                            self.tr("Ukrainian"),
+                            self.tr("Urdu"),
+                            self.tr("Uzbek"),
+                            self.tr("Vietnamese"),
+                            self.tr("Wolof"),
+                            self.tr("Xhosa"),
+                            self.tr("Yoruba"),
+                            self.tr("Chinese"),
+                            self.tr("Zulu")
+                         ]
+        
+    def getLanguageStrings(self):
 
-    def displayName(self):
-        """
-        Returns the translated algorithm name, which should be used for any
-        user-visible display of the algorithm name.
-        """
-        return 'Geocode addresses'
+        outputList = []
 
-    def group(self):
-        """
-        Returns the name of the group this algorithm belongs to. This string
-        should be localised.
-        """
-        # return self.tr(self.groupId())
-        return None
+        for i in range(len(self.languages)):
+            # logging.debug('{0} - {1}'.format(self.parseLanguage(i), self.languages[i]))
+            outputList.append('{0} - {1}'.format(self.parseLanguage(i), self.languages[i]))
 
-    def groupId(self):
-        """
-        Returns the unique ID of the group this algorithm belongs to. This
-        string should be fixed for the algorithm, and must not be localised.
-        The group id should be unique within each provider. Group id should
-        contain lowercase alphanumeric characters only and no spaces or other
-        formatting characters.
-        """
-        return None
-
-    def tr(self, string):
-        return QCoreApplication.translate('Processing', string)
-
-    def createInstance(self):
-        return ForwardGeocode()
-
-    def shortHelpString(self):
-        """
-        Returns a localised short help string for the algorithm.
-        """
-        return self.tr('Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location tag in human language) to point geometries. This process is also known as <b>forward geocoding</b>. Read more about this topic in the <a href="https://opencagedata.com/faq">OpenCage FAQ</a>.')
-    
-    def helpString(self):
-        """
-        Returns a localised help string for the algorithm.
-        """
-        return self.tr('Geocoding addresses')
-    
-    def helpUrl(self):
-            return "https://opencagedata.com/api"
+        return outputList
