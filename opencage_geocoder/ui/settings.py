@@ -15,6 +15,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(433, 628)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("ui/../icon.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        Form.setWindowIcon(icon)
         self.verticalLayout = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout.setObjectName("verticalLayout")
         self.groupBox = QtWidgets.QGroupBox(Form)
@@ -24,18 +27,24 @@ class Ui_Form(object):
         self.label = QtWidgets.QLabel(self.groupBox)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.label_2 = QtWidgets.QLabel(self.groupBox)
+        self.label_2.setScaledContents(False)
+        self.label_2.setWordWrap(True)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout.addWidget(self.label_2, 1, 0, 1, 2)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.gridLayout.addItem(spacerItem, 2, 0, 1, 1)
         self.api_key_line_edit = QtWidgets.QLineEdit(self.groupBox)
         self.api_key_line_edit.setObjectName("api_key_line_edit")
         self.gridLayout.addWidget(self.api_key_line_edit, 0, 1, 1, 1)
         self.verticalLayout.addWidget(self.groupBox)
-        spacerItem = QtWidgets.QSpacerItem(20, 56, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "OpenCage"))
         self.groupBox.setTitle(_translate("Form", "OpenCage API Settings"))
         self.label.setText(_translate("Form", "API key"))
+        self.label_2.setText(_translate("Form", "<html><head/><body><p>You can sign up for a key on: <a href=\"https://opencagedata.com/pricing\"><span style=\" text-decoration: underline; color:#0000ff;\">https://opencagedata.com/pricing</span></a> . If you register for a free key, please bear in mind the <a href=\"https://opencagedata.com/api#free-trial#\">limitations on latency and number of daily requests</a>.</p></body></html>"))
