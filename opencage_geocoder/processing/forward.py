@@ -479,7 +479,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return 'Forward geocoder'
+        return 'Geocode addresses'
 
     def group(self):
         """
