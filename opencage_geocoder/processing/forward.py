@@ -75,8 +75,8 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     # calling from the QGIS console.
 
     OUTPUT = 'Geocoded'
-    INPUT = 'Input Layer'
-    FIELD = 'FIELD'
+    INPUT = 'Address Layer'
+    FIELD = 'Addresses'
     ABBRV = 'Abbreviated?'
     NO_ANNOTATIONS = 'No annotations'
     NO_RECORD = 'No record'
@@ -94,7 +94,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSource(
                 self.INPUT,
-                self.tr('Input layer'),
+                self.tr('Input address file'),
                 [QgsProcessing.TypeFile]
             )
             # ,
@@ -106,7 +106,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterField(
                 self.FIELD,
-                self.tr("Address Field"),
+                self.tr("Address field"),
                 '',
                 self.INPUT
             )
@@ -269,7 +269,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.OUTPUT,
-                self.tr('Output layer')
+                self.tr('Geocoded output layer')
             )
         )
 
@@ -513,7 +513,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         """
         Returns a localised short help string for the algorithm.
         """
-        return self.tr('Geocoder')
+        return self.tr('Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location tag in human language) to point geometries. This process is also known as <b>forward geocoding</b>. Read more about this topic in the <a href="https://opencagedata.com/faq">OpenCage FAQ</a>.')
     
     def helpString(self):
         """
