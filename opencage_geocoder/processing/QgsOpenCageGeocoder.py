@@ -83,14 +83,14 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
                     new_feature.setAttribute(k, v)
                     # logging.debug(k,v)
 
-            new_feature.setAttribute('formatted',json[0]['formatted'])
-
             # Adds annotations
             if 'annotations' in json[0]:
                 self.setAnnotations(json, new_feature)
 
-            # Adds formatted string
+            # Adds original address, formatted string and confidence
+            new_feature.setAttribute('original_address',str)
             new_feature.setAttribute('formatted',json[0]['formatted'])
+            new_feature.setAttribute('confidence',json[0]['confidence'])
 
             feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
             return new_feature
@@ -165,6 +165,8 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         "state_code": "",
         "town": "",
         "formatted": "",
+        "original_address": "",
+        "confidence": 0,
         }
 
         if (no_annotations == False):
