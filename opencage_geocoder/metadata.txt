@@ -12,8 +12,8 @@ email=info@byteroad.net
 
 about=Geocoding using the OpenCage API.
 
-tracker=https://github.com/OpenCageData/opencage_geocoder/issues
-repository=https://github.com/OpenCageData/opencage_geocoder
+tracker=https://github.com/OpenCageData/opencage-qgis-plugin/issues
+repository=https://github.com/OpenCageData/opencage-qgis-plugin/issues
 # End of mandatory metadata
 
 # Recommended items:
@@ -23,7 +23,7 @@ hasProcessingProvider=yes
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=python,geocoding,forward geocoder
+tags=python,geocoding,forward geocoder,addresses
 
 homepage=https://opencagedata.com/
 category=Analysis

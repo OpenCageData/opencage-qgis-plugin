@@ -4,6 +4,8 @@ This processing plugin enables geocoding using the [OpenCage Geocoding API](http
 
 ## Manual Install
 
+You can do this, if you want to develop/test the plugin. Once the it is available through the [plugin hub](https://plugins.qgis.org/), you can install it through the [plugin manager](https://docs.qgis.org/3.28/en/docs/training_manual/qgis_plugins/fetching_plugins.html).
+
 ### Short Version
 
 * Copy the entire directory containing the plugin to the QGIS plugin directory
@@ -16,6 +18,8 @@ This processing plugin enables geocoding using the [OpenCage Geocoding API](http
 The source code is the sub-folder `opencage_geocoder`, on this repository. To find out where the plugin folder is located in your machine, in the top-level menu of QGIS choose `Settings->User Profiles->Open Active Folder`.  From that path, navigate to `Python->Plugins`
 
 <img src="./active-qgis-folder.png" width="50%">
+
+After copying the files, you may need to restart QGIS in order for the plugin to be detected.
 
 1. Enable the plugin in the QGIS plugin manager
 
@@ -39,7 +43,7 @@ You can browse the processing panel to find the `Opencage` provider, or type `op
 
 ### Forward Geocoding
 
-Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./tests/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
+Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./test/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
 
  <img src="./address-file.png" width="50%">
 
@@ -51,8 +55,7 @@ The geocode process will run in the background and show you a log of what is hap
 
  <img src="./run-forward.png" width="50%">
 
-  <img src="./results.png" width="50%">
-
+<img src="./results.png" width="50%">
 
 ## Develop
 
