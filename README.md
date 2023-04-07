@@ -43,7 +43,7 @@ You can browse the processing panel to find the `Opencage` provider, or type `op
 
 ### Forward Geocoding
 
-Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./test/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
+Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./test/data/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
 
  <img src="./address-file.png" width="50%">
 
@@ -65,6 +65,27 @@ The geocode process will run in the background and show you a log of what is hap
   * Test the code using `make test` (or run tests from your IDE)
 
   For information on writing PyQGIS code, see http://loc8.cc/pyqgis_resources for a list of resources.
+
+## Test
+
+You can run the unit tests on the [test folder](./test/).
+
+Run all tests:
+
+```bash
+pytest-3 opencage_geocoder/test/
+```
+Run specific test:
+
+```bash
+ pytest-3 opencage_geocoder/test/test_forward_geocoder.py 
+```
+
+Before running the tests, you need to export your OpenCage key as an environment variable:
+
+```bash
+ export OPENCAGE_KEY=[your-key-here]
+```
 
 ## Who is OpenCage GmbH?
 
