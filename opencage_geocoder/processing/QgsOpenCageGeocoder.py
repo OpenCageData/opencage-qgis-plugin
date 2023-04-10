@@ -62,7 +62,8 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
     def flags():
         return QgsGeocoderInterface.GeocodesStrings
 
-    def forward(self, str, abbrveviation, n_annotations, n_record, lang, extent, countries, context, feedback):
+    def forward(self, str, abbrveviation, n_annotations, 
+                n_record, lang, extent, countries, context, feedback):
 
         formatted_bounds = '{},{},{},{}'.format(extent.xMinimum(),extent.yMinimum(),extent.xMaximum(),extent.yMaximum())
         # logging.debug("EXTENT: {}".format(formatted_bounds))
@@ -102,6 +103,40 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         
         feedback.pushWarning("Could not geocode {}".format(str))
         return None
+
+    def reverse(self, feature, lat, lng, abbrveviation, n_annotations, 
+                n_record, lang, context, feedback):
+    
+        json = self.geocoder.reverse_geocode(lat, lng, abbrv=abbrveviation, no_annotations=n_annotations, 
+                                     no_record=n_record, language=lang)
+
+        logging.debug(json)
+
+        # if json and len(json):
+
+        #     new_feature.setFields(self.appendedFields())
+
+        #     # Adds components
+        #     for k,v in json[0]['components'].items():
+        #         if k in self.fieldList:
+        #             new_feature.setAttribute(k, v)
+        #             # logging.debug(k,v)
+
+        #     # Adds annotations
+        #     if 'annotations' in json[0]:
+        #         self.setAnnotations(json, new_feature)
+
+        #     # Adds original address, formatted string and confidence
+        #     new_feature.setAttribute('original_address',str)
+        #     new_feature.setAttribute('formatted',json[0]['formatted'])
+        #     new_feature.setAttribute('confidence',json[0]['confidence'])
+
+        #     feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
+        #     return new_feature
+        
+        # feedback.pushWarning("Could not geocode {}".format(str))
+        # return None
+
 
 
     def setAnnotations(self, json, feature):

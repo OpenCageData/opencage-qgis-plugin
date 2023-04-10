@@ -40,6 +40,7 @@ SOURCES = \
 	__init__.py \
 	gui_utils.py \
 	processing/forward.py \
+	processing/reverse.py \	
 	processing/provider.py \
 	gui/gui_utils.py
 
@@ -51,6 +52,7 @@ PY_FILES = \
 	__init__.py \
 	gui_utils.py \
 	processing/forward.py \
+	processing/reverse.py \
 	processing/provider.py \
 	gui/gui_utils.py \
 	ui/settings.ui

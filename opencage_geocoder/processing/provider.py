@@ -31,9 +31,9 @@ __copyright__ = '(C) 2023 by opencage'
 __revision__ = '$Format:%H$'
 
 from qgis.PyQt.QtCore import QCoreApplication
-# from qgis.analysis import QgsBatchGeocodeAlgorithm
 from qgis.core import QgsProcessingProvider
 from .forward import ForwardGeocode
+from .reverse import ReverseGeocode
 
 from opencage_geocoder.gui.gui_utils import GuiUtils
 from opencage_geocoder.processing.algorithm import (
@@ -64,11 +64,7 @@ class OpenCageProvider(QgsProcessingProvider):
         Loads all algorithms belonging to this provider.
         """     
         self.addAlgorithm(ForwardGeocode())
-        # self.addAlgorithm(OpenCageBatchGeocode(self.api_key, self.region))
-
-        # add additional algorithms here
-        # self.addAlgorithm(MyOtherAlgorithm())
-
+        self.addAlgorithm(ReverseGeocode())
 
     def icon(self):
         """

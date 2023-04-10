@@ -23,7 +23,7 @@ hasProcessingProvider=yes
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=python,geocoding,forward geocoder,addresses
+tags=python,geocoding,forward geocoder,reverse geocoder,addresses
 
 homepage=https://opencagedata.com/
 category=Analysis

@@ -48,10 +48,10 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterDefinition,
                        QgsProcessingException,
                        QgsProcessingParameterExtent,
+                       QgsCoordinateTransform,
+                       QgsProject,
                        QgsProcessingParameterFeatureSink)
 
-# from .geocoder import OpenCageGeocode
-# from qgis.analysis import QgsBatchGeocodeAlgorithm
 from .QgsOpenCageGeocoder import QgsOpenCageGeocoder
 
 import csv
@@ -59,7 +59,7 @@ import csv
 import logging
 logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
-class ForwardGeocode(QgsProcessingAlgorithm):
+class ReverseGeocode(QgsProcessingAlgorithm):
     """
     This is an example algorithm that takes a vector layer and
     creates a new identical one.
@@ -77,15 +77,11 @@ class ForwardGeocode(QgsProcessingAlgorithm):
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
-    OUTPUT = 'Geocoded'
-    INPUT = 'Address Layer'
-    FIELD = 'Addresses'
+    INPUT = 'INPUT'
     ABBRV = 'Abbreviated?'
     NO_ANNOTATIONS = 'No annotations'
     NO_RECORD = 'No record'
     LANGUAGE = 'Language'
-    BOUNDS = 'Bounds'
-    COUNTRY = 'Country'
 
     def initAlgorithm(self, config):
         """
@@ -94,7 +90,6 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         """
 
         self.setupLanguages()
-        self.setupCountries()
 
         # We add the input vector features source. It can have any kind of
         # geometry.
@@ -102,25 +97,14 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSource(
                 self.INPUT,
-                self.tr('Input address file'),
-                [QgsProcessing.TypeFile]
-            )
-            # ,
-            # help_text=self.tr(
-            #     'File with addresses that you want to geocode.'
-            # ),
-        )
-
-        self.addParameter(
-            QgsProcessingParameterField(
-                self.FIELD,
-                self.tr("Address field"),
-                '',
-                self.INPUT
+                self.tr('Point Layer (results will be added as attributes)'),
+                [QgsProcessing.TypeVectorPoint] # accepts any geometry
             )
         )
 
         # Set advanced parameters
+        # TODO: add address_only
+
         abbrvPar = QgsProcessingParameterBoolean(
             self.ABBRV, self.tr('Attempt to abbreviate and shorten the returned address (on the "formatted" field)'), defaultValue=False)
         
@@ -130,21 +114,6 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         noRecordPar = QgsProcessingParameterBoolean(
             self.NO_RECORD, self.tr('Privacy mode: do not log query contents. It may limit customer support.'), defaultValue=False)
 
-        extentPar = QgsProcessingParameterExtent(
-                self.BOUNDS, 
-                self.tr('Bounds: restrict the possible results to a defined bounding box'),
-                optional=True)
-
-        # Country names from here: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
-        # (ISO 3166-1 alpha-2)
-        countryPar = QgsProcessingParameterEnum(
-                self.COUNTRY,
-                self.tr('Restricts results to the specified country/territory or countries'),
-                options=self.getCountryStrings(),
-                allowMultiple = True,
-                defaultValue=None,
-                optional=True)
-        
         # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
         # (List of common primary language subtags)
         langPar = QgsProcessingParameterEnum(
@@ -163,36 +132,13 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         noRecordPar.setFlags(noRecordPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noRecordPar)
 
-        extentPar.setFlags(extentPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(extentPar)
-
-        countryPar.setFlags(countryPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
-        self.addParameter(countryPar)
-
         langPar.setFlags(langPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(langPar)
-
-        # We add a feature sink in which to store our processed features (this
-        # usually takes the form of a newly created vector layer when the
-        # algorithm is run in QGIS).
-        self.addParameter(
-            QgsProcessingParameterFeatureSink(
-                self.OUTPUT,
-                self.tr('Geocoded output layer')
-            )
-        )
 
     def processAlgorithm(self, parameters, context, feedback):
         """
         Here is where the processing itself takes place.
         """
-
-        # Grab address field
-        address = self.parameterAsFields(
-            parameters,
-            self.FIELD,
-            context
-        )[0]
 
         abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
         no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 1
@@ -200,19 +146,6 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         lang_idx= self.parameterAsInt(parameters, self.LANGUAGE, context)
         language = self.parseLanguage(lang_idx)
-
-        country_ids= self.parameterAsEnums(parameters, self.COUNTRY, context)
-        # logging.debug('ids: {}'.format(country_ids))
-
-        countries=[]
-        for i in country_ids:
-            countries.append(self.countries[i][0])
-
-        countries_str = ','.join(countries)
-
-        crs = QgsCoordinateReferenceSystem("EPSG:4326")
-        extent = self.parameterAsExtent(parameters, self.BOUNDS, context, crs)
-        # logging.debug(extent)
 
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
@@ -225,7 +158,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         source = self.parameterAsSource(parameters, self.INPUT, context)
 
         crs = QgsCoordinateReferenceSystem("EPSG:4326")
-        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
+        (sink, dest_id) = self.parameterAsSink(parameters, self.INPUT,
                 context, geocoder.appendedFields(), QgsWkbTypes.Point , crs)
 
         # Compute the number of steps to display within the progress bar and
@@ -234,24 +167,31 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         features = source.getFeatures()
 
         try:
+            # Make sure geometries are in WGS84
+            xform = QgsCoordinateTransform(source.sourceCrs(),
+                                    QgsCoordinateReferenceSystem("EPSG:4326"),
+                                      QgsProject.instance())
 
             for current, feature in enumerate(features):
                 # Stop the algorithm if cancel button has been clicked
                 if feedback.isCanceled():
                     break
 
-                # Retrieve the geometry and address (later we can let user decide which fields to include)
-                d = feature.attribute(feature.fieldNameIndex(address))
-                new_feature = geocoder.forward(d, abbreviation, no_annotations, 
-                                               no_record, language, extent, 
-                                               countries_str, context, feedback)
-                if new_feature:
-                    sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
+                geom = feature.geometry()
+                res = geom.transform(xform)
+                if res != 0:
+                    raise QgsProcessingException
+                lat = geom.asPoint().y()
+                lng = geom.asPoint().x()
+                
+                geocoder.reverse(feature, lat, lng, abbreviation, no_annotations, 
+                                               no_record, language, 
+                                               context, feedback)
 
                 # Update the progress bar
                 feedback.setProgress(int(current * total))
 
-            return {self.OUTPUT: dest_id}
+            return {self.INPUT: dest_id}
     
         except Exception as e:
             feedback.reportError("Error: {}".format(e), True)
@@ -265,14 +205,14 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'f_geocode'
+        return 'r_geocode'
 
     def displayName(self):
         """
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return 'Geocode addresses'
+        return 'Geocode coordinates'
 
     def group(self):
         """
@@ -296,19 +236,19 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         return QCoreApplication.translate('Processing', string)
 
     def createInstance(self):
-        return ForwardGeocode()
+        return ReverseGeocode()
 
     def shortHelpString(self):
         """
         Returns a localised short help string for the algorithm.
         """
-        return self.tr('Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location tag in human language) to point geometries. This process is also known as <b>forward geocoding</b>. Read more about this topic in the <a href="https://opencagedata.com/faq">OpenCage FAQ</a>.')
+        return self.tr('Turn point geometries into human understandable place names or addresses. This process is also known as <b>reverse geocoding</b>. Read more about this topic in the <a href="https://opencagedata.com/faq">OpenCage FAQ</a>.')
     
     def helpString(self):
         """
         Returns a localised help string for the algorithm.
         """
-        return self.tr('Geocoding addresses')
+        return self.tr('Geocoding coordinates')
     
     def helpUrl(self):
             return "https://opencagedata.com/api"
@@ -587,266 +527,3 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         return outputList
     
-    def setupCountries(self):
-
-        self.countries = [
-            [self.tr("AD"), self.tr("Andorra")],
-            [self.tr("AE"), self.tr("United Arab Emirates")],
-            [self.tr("AF"), self.tr("Afghanistan")],
-            [self.tr("AG"), self.tr("Antigua and Barbuda")],
-            [self.tr("AI"), self.tr("Anguilla")],
-            [self.tr("AL"), self.tr("Albania")],
-            [self.tr("AM"), self.tr("Armenia")],
-            [self.tr("AO"), self.tr("Angola")],
-            [self.tr("AQ"), self.tr("Antarctica")],
-            [self.tr("AR"), self.tr("Argentina")],
-            [self.tr("AS"), self.tr("American Samoa")],
-            [self.tr("AT"), self.tr("Austria")],
-            [self.tr("AU"), self.tr("Australia")],
-            [self.tr("AW"), self.tr("Aruba")],
-            [self.tr("AX"), self.tr("Åland Islands")],
-            [self.tr("AZ"), self.tr("Azerbaijan")],
-            [self.tr("BA"), self.tr("Bosnia and Herzegovina")],
-            [self.tr("BB"), self.tr("Barbados")],
-            [self.tr("BD"), self.tr("Bangladesh")],
-            [self.tr("BE"), self.tr("Belgium")],
-            [self.tr("BF"), self.tr("Burkina Faso")],
-            [self.tr("BG"), self.tr("Bulgaria")],
-            [self.tr("BH"), self.tr("Bahrain")],
-            [self.tr("BI"), self.tr("Burundi")],
-            [self.tr("BJ"), self.tr("Benin")],
-            [self.tr("BL"), self.tr("Saint Barthélemy")],
-            [self.tr("BM"), self.tr("Bermuda")],
-            [self.tr("BN"), self.tr("Brunei Darussalam")],
-            [self.tr("BO"), self.tr("Bolivia (Plurinational State of)")],
-            [self.tr("BQ"), self.tr("Bonaire, Sint Eustatius and Saba")],
-            [self.tr("BR"), self.tr("Brazil")],
-            [self.tr("BS"), self.tr("Bahamas")],
-            [self.tr("BT"), self.tr("Bhutan")],
-            [self.tr("BV"), self.tr("Bouvet Island")],
-            [self.tr("BW"), self.tr("Botswana")],
-            [self.tr("BY"), self.tr("Belarus")],
-            [self.tr("BZ"), self.tr("Belize")],
-            [self.tr("CA"), self.tr("Canada")],
-            [self.tr("CC"), self.tr("Cocos (Keeling) Islands")],
-            [self.tr("CD"), self.tr("Congo, Democratic Republic of the")],
-            [self.tr("CF"), self.tr("Central African Republic")],
-            [self.tr("CG"), self.tr("Congo")],
-            [self.tr("CH"), self.tr("Switzerland")],
-            [self.tr("CI"), self.tr("Côte d'Ivoire")],
-            [self.tr("CK"), self.tr("Cook Islands")],
-            [self.tr("CL"), self.tr("Chile")],
-            [self.tr("CM"), self.tr("Cameroon")],
-            [self.tr("CN"), self.tr("China")],
-            [self.tr("CO"), self.tr("Colombia")],
-            [self.tr("CR"), self.tr("Costa Rica")],
-            [self.tr("CU"), self.tr("Cuba")],
-            [self.tr("CV"), self.tr("Cabo Verde")],
-            [self.tr("CW"), self.tr("Curaçao")],
-            [self.tr("CX"), self.tr("Christmas Island")],
-            [self.tr("CY"), self.tr("Cyprus")],
-            [self.tr("CZ"), self.tr("Czechia")],
-            [self.tr("DE"), self.tr("Germany")],
-            [self.tr("DJ"), self.tr("Djibouti")],
-            [self.tr("DK"), self.tr("Denmark")],
-            [self.tr("DM"), self.tr("Dominica")],
-            [self.tr("DO"), self.tr("Dominican Republic")],
-            [self.tr("DZ"), self.tr("Algeria")],
-            [self.tr("EC"), self.tr("Ecuador")],
-            [self.tr("EE"), self.tr("Estonia")],
-            [self.tr("EG"), self.tr("Egypt")],
-            [self.tr("EH"), self.tr("Western Sahara")],
-            [self.tr("ER"), self.tr("Eritrea")],
-            [self.tr("ES"), self.tr("Spain")],
-            [self.tr("ET"), self.tr("Ethiopia")],
-            [self.tr("FI"), self.tr("Finland")],
-            [self.tr("FJ"), self.tr("Fiji")],
-            [self.tr("FK"), self.tr("Falkland Islands (Malvinas)")],
-            [self.tr("FM"), self.tr("Micronesia (Federated States of)")],
-            [self.tr("FO"), self.tr("Faroe Islands")],
-            [self.tr("FR"), self.tr("France")],
-            [self.tr("GA"), self.tr("Gabon")],
-            [self.tr("GB"), self.tr("United Kingdom of Great Britain and Northern Ireland")],
-            [self.tr("GD"), self.tr("Grenada")],
-            [self.tr("GE"), self.tr("Georgia")],
-            [self.tr("GF"), self.tr("French Guiana")],
-            [self.tr("GG"), self.tr("Guernsey")],
-            [self.tr("GH"), self.tr("Ghana")],
-            [self.tr("GI"), self.tr("Gibraltar")],
-            [self.tr("GL"), self.tr("Greenland")],
-            [self.tr("GM"), self.tr("Gambia")],
-            [self.tr("GN"), self.tr("Guinea")],
-            [self.tr("GP"), self.tr("Guadeloupe")],
-            [self.tr("GQ"), self.tr("Equatorial Guinea")],
-            [self.tr("GR"), self.tr("Greece")],
-            [self.tr("GS"), self.tr("South Georgia and the South Sandwich Islands")],
-            [self.tr("GT"), self.tr("Guatemala")],
-            [self.tr("GU"), self.tr("Guam")],
-            [self.tr("GW"), self.tr("Guinea-Bissau")],
-            [self.tr("GY"), self.tr("Guyana")],
-            [self.tr("HK"), self.tr("Hong Kong")],
-            [self.tr("HM"), self.tr("Heard Island and McDonald Islands")],
-            [self.tr("HN"), self.tr("Honduras")],
-            [self.tr("HR"), self.tr("Croatia")],
-            [self.tr("HT"), self.tr("Haiti")],
-            [self.tr("HU"), self.tr("Hungary")],
-            [self.tr("ID"), self.tr("Indonesia")],
-            [self.tr("IE"), self.tr("Ireland")],
-            [self.tr("IL"), self.tr("Israel")],
-            [self.tr("IM"), self.tr("Isle of Man")],
-            [self.tr("IN"), self.tr("India")],
-            [self.tr("IO"), self.tr("British Indian Ocean Territory")],
-            [self.tr("IQ"), self.tr("Iraq")],
-            [self.tr("IR"), self.tr("Iran (Islamic Republic of)")],
-            [self.tr("IS"), self.tr("Iceland")],
-            [self.tr("IT"), self.tr("Italy")],
-            [self.tr("JE"), self.tr("Jersey")],
-            [self.tr("JM"), self.tr("Jamaica")],
-            [self.tr("JO"), self.tr("Jordan")],
-            [self.tr("JP"), self.tr("Japan")],
-            [self.tr("KE"), self.tr("Kenya")],
-            [self.tr("KG"), self.tr("Kyrgyzstan")],
-            [self.tr("KH"), self.tr("Cambodia")],
-            [self.tr("KI"), self.tr("Kiribati")],
-            [self.tr("KM"), self.tr("Comoros")],
-            [self.tr("KN"), self.tr("Saint Kitts and Nevis")],
-            [self.tr("KP"), self.tr("Korea (Democratic People's Republic of)")],
-            [self.tr("KR"), self.tr("Korea, Republic of")],
-            [self.tr("KW"), self.tr("Kuwait")],
-            [self.tr("KY"), self.tr("Cayman Islands")],
-            [self.tr("KZ"), self.tr("Kazakhstan")],
-            [self.tr("LA"), self.tr("Lao People's Democratic Republic")],
-            [self.tr("LB"), self.tr("Lebanon")],
-            [self.tr("LC"), self.tr("Saint Lucia")],
-            [self.tr("LI"), self.tr("Liechtenstein")],
-            [self.tr("LK"), self.tr("Sri Lanka")],
-            [self.tr("LR"), self.tr("Liberia")],
-            [self.tr("LS"), self.tr("Lesotho")],
-            [self.tr("LT"), self.tr("Lithuania")],
-            [self.tr("LU"), self.tr("Luxembourg")],
-            [self.tr("LV"), self.tr("Latvia")],
-            [self.tr("LY"), self.tr("Libya")],
-            [self.tr("MA"), self.tr("Morocco")],
-            [self.tr("MC"), self.tr("Monaco")],
-            [self.tr("MD"), self.tr("Moldova, Republic of")],
-            [self.tr("ME"), self.tr("Montenegro")],
-            [self.tr("MF"), self.tr("Saint Martin (French part)")],
-            [self.tr("MG"), self.tr("Madagascar")],
-            [self.tr("MH"), self.tr("Marshall Islands")],
-            [self.tr("MK"), self.tr("North Macedonia")],
-            [self.tr("ML"), self.tr("Mali")],
-            [self.tr("MM"), self.tr("Myanmar")],
-            [self.tr("MN"), self.tr("Mongolia")],
-            [self.tr("MO"), self.tr("Macao")],
-            [self.tr("MP"), self.tr("Northern Mariana Islands")],
-            [self.tr("MQ"), self.tr("Martinique")],
-            [self.tr("MR"), self.tr("Mauritania")],
-            [self.tr("MS"), self.tr("Montserrat")],
-            [self.tr("MT"), self.tr("Malta")],
-            [self.tr("MU"), self.tr("Mauritius")],
-            [self.tr("MV"), self.tr("Maldives")],
-            [self.tr("MW"), self.tr("Malawi")],
-            [self.tr("MX"), self.tr("Mexico")],
-            [self.tr("MY"), self.tr("Malaysia")],
-            [self.tr("MZ"), self.tr("Mozambique")],
-            [self.tr("nan"), self.tr("Namibia")],
-            [self.tr("NC"), self.tr("New Caledonia")],
-            [self.tr("NE"), self.tr("Niger")],
-            [self.tr("NF"), self.tr("Norfolk Island")],
-            [self.tr("NG"), self.tr("Nigeria")],
-            [self.tr("NI"), self.tr("Nicaragua")],
-            [self.tr("NL"), self.tr("Netherlands, Kingdom of the")],
-            [self.tr("NO"), self.tr("Norway")],
-            [self.tr("NP"), self.tr("Nepal")],
-            [self.tr("NR"), self.tr("Nauru")],
-            [self.tr("NU"), self.tr("Niue")],
-            [self.tr("NZ"), self.tr("New Zealand")],
-            [self.tr("OM"), self.tr("Oman")],
-            [self.tr("PA"), self.tr("Panama")],
-            [self.tr("PE"), self.tr("Peru")],
-            [self.tr("PF"), self.tr("French Polynesia")],
-            [self.tr("PG"), self.tr("Papua New Guinea")],
-            [self.tr("PH"), self.tr("Philippines")],
-            [self.tr("PK"), self.tr("Pakistan")],
-            [self.tr("PL"), self.tr("Poland")],
-            [self.tr("PM"), self.tr("Saint Pierre and Miquelon")],
-            [self.tr("PN"), self.tr("Pitcairn")],
-            [self.tr("PR"), self.tr("Puerto Rico")],
-            [self.tr("PS"), self.tr("Palestine, State of")],
-            [self.tr("PT"), self.tr("Portugal")],
-            [self.tr("PW"), self.tr("Palau")],
-            [self.tr("PY"), self.tr("Paraguay")],
-            [self.tr("QA"), self.tr("Qatar")],
-            [self.tr("RE"), self.tr("Réunion")],
-            [self.tr("RO"), self.tr("Romania")],
-            [self.tr("RS"), self.tr("Serbia")],
-            [self.tr("RU"), self.tr("Russian Federation")],
-            [self.tr("RW"), self.tr("Rwanda")],
-            [self.tr("SA"), self.tr("Saudi Arabia")],
-            [self.tr("SB"), self.tr("Solomon Islands")],
-            [self.tr("SC"), self.tr("Seychelles")],
-            [self.tr("SD"), self.tr("Sudan")],
-            [self.tr("SE"), self.tr("Sweden")],
-            [self.tr("SG"), self.tr("Singapore")],
-            [self.tr("SH"), self.tr("Saint Helena, Ascension and Tristan da Cunha")],
-            [self.tr("SI"), self.tr("Slovenia")],
-            [self.tr("SJ"), self.tr("Svalbard and Jan Mayen")],
-            [self.tr("SK"), self.tr("Slovakia")],
-            [self.tr("SL"), self.tr("Sierra Leone")],
-            [self.tr("SM"), self.tr("San Marino")],
-            [self.tr("SN"), self.tr("Senegal")],
-            [self.tr("SO"), self.tr("Somalia")],
-            [self.tr("SR"), self.tr("Suriname")],
-            [self.tr("SS"), self.tr("South Sudan")],
-            [self.tr("ST"), self.tr("Sao Tome and Principe")],
-            [self.tr("SV"), self.tr("El Salvador")],
-            [self.tr("SX"), self.tr("Sint Maarten (Dutch part)")],
-            [self.tr("SY"), self.tr("Syrian Arab Republic")],
-            [self.tr("SZ"), self.tr("Eswatini")],
-            [self.tr("TC"), self.tr("Turks and Caicos Islands")],
-            [self.tr("TD"), self.tr("Chad")],
-            [self.tr("TF"), self.tr("French Southern Territories")],
-            [self.tr("TG"), self.tr("Togo")],
-            [self.tr("TH"), self.tr("Thailand")],
-            [self.tr("TJ"), self.tr("Tajikistan")],
-            [self.tr("TK"), self.tr("Tokelau")],
-            [self.tr("TL"), self.tr("Timor-Leste")],
-            [self.tr("TM"), self.tr("Turkmenistan")],
-            [self.tr("TN"), self.tr("Tunisia")],
-            [self.tr("TO"), self.tr("Tonga")],
-            [self.tr("TR"), self.tr("Türkiye")],
-            [self.tr("TT"), self.tr("Trinidad and Tobago")],
-            [self.tr("TV"), self.tr("Tuvalu")],
-            [self.tr("TW"), self.tr("Taiwan, Province of China")],
-            [self.tr("TZ"), self.tr("Tanzania, United Republic of")],
-            [self.tr("UA"), self.tr("Ukraine")],
-            [self.tr("UG"), self.tr("Uganda")],
-            [self.tr("UM"), self.tr("United States Minor Outlying Islands")],
-            [self.tr("US"), self.tr("United States of America")],
-            [self.tr("UY"), self.tr("Uruguay")],
-            [self.tr("UZ"), self.tr("Uzbekistan")],
-            [self.tr("VA"), self.tr("Holy See")],
-            [self.tr("VC"), self.tr("Saint Vincent and the Grenadines")],
-            [self.tr("VE"), self.tr("Venezuela (Bolivarian Republic of)")],
-            [self.tr("VG"), self.tr("Virgin Islands (British)")],
-            [self.tr("VI"), self.tr("Virgin Islands (U.S.)")],
-            [self.tr("VN"), self.tr("Viet Nam")],
-            [self.tr("VU"), self.tr("Vanuatu")],
-            [self.tr("WF"), self.tr("Wallis and Futuna")],
-            [self.tr("WS"), self.tr("Samoa")],
-            [self.tr("YE"), self.tr("Yemen")],
-            [self.tr("YT"), self.tr("Mayotte")],
-            [self.tr("ZA"), self.tr("South Africa")],
-            [self.tr("ZM"), self.tr("Zambia")],
-            [self.tr("ZW"), self.tr("Zimbabwe")]
-          ]
-
-    def getCountryStrings(self):
-
-        outputList = []
-
-        for i in range(len(self.countries)):
-            # logging.debug('{0} - {1}'.format(self.parseLanguage(i), self.languages[i]))
-            outputList.append('{0} - {1}'.format(self.countries[i][0], self.countries[i][1]))
-
-        return outputList
