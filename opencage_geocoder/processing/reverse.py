@@ -77,11 +77,13 @@ class ReverseGeocode(QgsProcessingAlgorithm):
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
+    OUTPUT = 'Geocoded'
     INPUT = 'INPUT'
     ABBRV = 'Abbreviated?'
     NO_ANNOTATIONS = 'No annotations'
     NO_RECORD = 'No record'
     LANGUAGE = 'Language'
+    ADDRESS = 'Address only'
 
     def initAlgorithm(self, config):
         """
@@ -114,6 +116,9 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         noRecordPar = QgsProcessingParameterBoolean(
             self.NO_RECORD, self.tr('Privacy mode: do not log query contents. It may limit customer support.'), defaultValue=False)
 
+        addressOnly = QgsProcessingParameterBoolean(
+            self.ADDRESS, self.tr(' Include only the address (exluding POI names) in the formatted string'), defaultValue=False)
+
         # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
         # (List of common primary language subtags)
         langPar = QgsProcessingParameterEnum(
@@ -132,8 +137,18 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         noRecordPar.setFlags(noRecordPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noRecordPar)
 
+        addressOnly.setFlags(addressOnly.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(addressOnly)
+
         langPar.setFlags(langPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(langPar)
+
+        self.addParameter(
+            QgsProcessingParameterFeatureSink(
+                self.OUTPUT,
+                self.tr('Geocoded output layer')
+            )
+        )
 
     def processAlgorithm(self, parameters, context, feedback):
         """
@@ -143,6 +158,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
         no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 1
         no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) == True else 0
+        address_only = 1 if self.parameterAsBool(parameters, self.ADDRESS, context) == True else 0
 
         lang_idx= self.parameterAsInt(parameters, self.LANGUAGE, context)
         language = self.parseLanguage(lang_idx)
@@ -157,9 +173,9 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         # dictionary returned by the processAlgorithm function.
         source = self.parameterAsSource(parameters, self.INPUT, context)
 
-        crs = QgsCoordinateReferenceSystem("EPSG:4326")
-        (sink, dest_id) = self.parameterAsSink(parameters, self.INPUT,
-                context, geocoder.appendedFields(), QgsWkbTypes.Point , crs)
+        # crs = QgsCoordinateReferenceSystem("EPSG:4326")
+        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
+                context, geocoder.appendedFields(), QgsWkbTypes.Point , source.sourceCrs())
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
@@ -178,20 +194,25 @@ class ReverseGeocode(QgsProcessingAlgorithm):
                     break
 
                 geom = feature.geometry()
+                orig_geom = geom # Keep the original geometry
                 res = geom.transform(xform)
                 if res != 0:
                     raise QgsProcessingException
+                
                 lat = geom.asPoint().y()
                 lng = geom.asPoint().x()
                 
-                geocoder.reverse(feature, lat, lng, abbreviation, no_annotations, 
-                                               no_record, language, 
+                new_feature = geocoder.reverse(orig_geom, lat, lng, abbreviation, no_annotations, 
+                                               no_record, address_only, language, 
                                                context, feedback)
+
+                if new_feature:
+                    sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 
                 # Update the progress bar
                 feedback.setProgress(int(current * total))
 
-            return {self.INPUT: dest_id}
+            return {self.OUTPUT: dest_id}
     
         except Exception as e:
             feedback.reportError("Error: {}".format(e), True)

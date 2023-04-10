@@ -104,38 +104,43 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         feedback.pushWarning("Could not geocode {}".format(str))
         return None
 
-    def reverse(self, feature, lat, lng, abbrveviation, n_annotations, 
-                n_record, lang, context, feedback):
+    def reverse(self, geom, lat, lng, abbrveviation, n_annotations, 
+                n_record, address, lang, context, feedback):
     
         json = self.geocoder.reverse_geocode(lat, lng, abbrv=abbrveviation, no_annotations=n_annotations, 
-                                     no_record=n_record, language=lang)
+                                     no_record=n_record, address_only=address, language=lang)
 
-        logging.debug(json)
+        # logging.debug(json)
 
-        # if json and len(json):
+        if json and len(json):
 
-        #     new_feature.setFields(self.appendedFields())
+            logging.debug("COMES HERE!")
 
-        #     # Adds components
-        #     for k,v in json[0]['components'].items():
-        #         if k in self.fieldList:
-        #             new_feature.setAttribute(k, v)
-        #             # logging.debug(k,v)
+            new_feature= QgsFeature()
+            new_feature.setGeometry(geom)
 
-        #     # Adds annotations
-        #     if 'annotations' in json[0]:
-        #         self.setAnnotations(json, new_feature)
+            new_feature.setFields(self.appendedFields())
 
-        #     # Adds original address, formatted string and confidence
-        #     new_feature.setAttribute('original_address',str)
-        #     new_feature.setAttribute('formatted',json[0]['formatted'])
-        #     new_feature.setAttribute('confidence',json[0]['confidence'])
+            # Adds components
+            for k,v in json[0]['components'].items():
+                if k in self.fieldList:
+                    new_feature.setAttribute(k, v)
+                    logging.debug(k,v)
 
-        #     feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
-        #     return new_feature
+            # Adds annotations
+            if 'annotations' in json[0]:
+                self.setAnnotations(json, new_feature)
+
+            # Adds original address, formatted string and confidence
+            new_feature.setAttribute('formatted',json[0]['formatted'])
+            new_feature.setAttribute('confidence',json[0]['confidence'])
+            logging.debug('formatted',json[0]['formatted'])
+
+            feedback.pushInfo("({:.2f},{:.2f}) geocoded to: {}".format(lat,lng,json[0]['formatted']))
+            return new_feature
         
-        # feedback.pushWarning("Could not geocode {}".format(str))
-        # return None
+        feedback.pushWarning("Could not geocode: ({:.2f},{:.2f})".format(lat,lng))
+        return None
 
 
 
@@ -192,7 +197,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
                 feature.setAttribute('what3words',json[0]['annotations']['what3words']['words'])
 
 
-    def setFields(self, no_annotations):
+    def setFields(self, forward, no_annotations):
 
         fieldList = {
         "ISO_3166-1_alpha-2": "",
