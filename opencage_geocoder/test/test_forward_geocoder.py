@@ -23,7 +23,7 @@ class TestForwardGeoCoding(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestForwardGeoCoding, self).__init__(*args, **kwargs)
-        self.openCageGeocoder = QgsOpenCageGeocoder(API_KEY, True)
+        self.openCageGeocoder = QgsOpenCageGeocoder(API_KEY, True, True)
 
     def test_forward_geocoding_simple(self):
 
