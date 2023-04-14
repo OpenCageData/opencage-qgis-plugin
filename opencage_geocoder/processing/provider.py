@@ -36,14 +36,17 @@ from .forward import ForwardGeocode
 from .reverse import ReverseGeocode
 
 from opencage_geocoder.gui.gui_utils import GuiUtils
-from opencage_geocoder.processing.algorithm import (
-    OpenCageBatchGeocode
-)
 
 import logging
 logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 class OpenCageProvider(QgsProcessingProvider):
+    """
+    Defines the OpenCage provider.
+
+    As with all Processing provider algorithms, it extends the QgsProcessingProvider
+    class.
+    """
 
     def __init__(self):
         super().__init__()

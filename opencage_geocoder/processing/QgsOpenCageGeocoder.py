@@ -315,3 +315,5 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
     def wkbType():
         return QgsWkbTypes.Point
+
+
