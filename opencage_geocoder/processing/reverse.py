@@ -146,7 +146,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.OUTPUT,
-                self.tr('Geocoded output layer')
+                self.tr('Geocoded coordinates layer')
             )
         )
 
@@ -166,7 +166,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         settings = QgsSettings()
         self.api_key = settings.value('/plugins/opencage/api_key', '', str)
 
-        geocoder = QgsOpenCageGeocoder(self.api_key, no_annotations)
+        geocoder = QgsOpenCageGeocoder(self.api_key, False, no_annotations)
 
         # Retrieve the feature source and sink. The 'dest_id' variable is used
         # to uniquely identify the feature sink, and must be included in the
@@ -263,7 +263,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         """
         Returns a localised short help string for the algorithm.
         """
-        return self.tr('Turn point geometries into human understandable place names or addresses. This process is also known as <b>reverse geocoding</b>. Read more about this topic in the <a href="https://opencagedata.com/faq">OpenCage FAQ</a>.')
+        return self.tr('Turn point geometries into human understandable place names or addresses. This process is also known as <a href="https://opencagedata.com/faq">reverse geocoding</a>. <br>The coordinates used for geocoding are appended as attributes in the output file; for information about the other attributes, please check the help.')
     
     def helpString(self):
         """

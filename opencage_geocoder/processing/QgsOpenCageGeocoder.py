@@ -49,11 +49,11 @@ logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=loggin
 
 class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
-    def __init__(self, api_key, no_annotations):
+    def __init__(self, api_key, forward, no_annotations):
         self.api_key = api_key
         self.endpoint = 'https://api.opencagedata.com/geocode/v1/json'
         self.geocoder = OpenCageGeocode(self.api_key)
-        self.fieldList = self.setFields(no_annotations)
+        self.fieldList = self.setFields(forward, no_annotations)
         QgsGeocoderInterface.__init__(self)
 
     def apiKey(self):
@@ -94,9 +94,9 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
                 self.setAnnotations(json, new_feature)
 
             # Adds original address, formatted string and confidence
-            new_feature.setAttribute('original_address',str)
             new_feature.setAttribute('formatted',json[0]['formatted'])
             new_feature.setAttribute('confidence',json[0]['confidence'])
+            new_feature.setAttribute('original_address',str)
 
             feedback.pushInfo("{} geocoded to: {}".format(str, json[0]['formatted']))
             return new_feature
@@ -114,8 +114,6 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
         if json and len(json):
 
-            logging.debug("COMES HERE!")
-
             new_feature= QgsFeature()
             new_feature.setGeometry(geom)
 
@@ -131,9 +129,11 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
             if 'annotations' in json[0]:
                 self.setAnnotations(json, new_feature)
 
-            # Adds original address, formatted string and confidence
+            # Adds original coords, formatted string and confidence
             new_feature.setAttribute('formatted',json[0]['formatted'])
             new_feature.setAttribute('confidence',json[0]['confidence'])
+            new_feature.setAttribute('lat', lat)
+            new_feature.setAttribute('lng', lng)
             logging.debug('formatted',json[0]['formatted'])
 
             feedback.pushInfo("({:.2f},{:.2f}) geocoded to: {}".format(lat,lng,json[0]['formatted']))
@@ -211,9 +211,14 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
         "state_code": "",
         "town": "",
         "formatted": "",
-        "original_address": "",
         "confidence": 0,
         }
+
+        if (forward):
+            fieldList["original_address"]= ""
+        else:
+            fieldList["lat"]= 0
+            fieldList["lng"]= 0
 
         if (no_annotations == False):
             fieldList["DMS.lat"] = ""
