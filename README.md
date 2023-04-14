@@ -87,7 +87,7 @@ Before running the tests, you need to export your OpenCage key as an environment
  export OPENCAGE_KEY=[your-key-here]
 ```
 
-### Data
+### Sample Data
 
 The [data](./opencage_geocoder/test/data/) folder contains sample data that can be used in the unit tests.
 
