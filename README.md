@@ -43,7 +43,7 @@ You can browse the processing panel to find the `Opencage` provider, or type `op
 
 ### Forward Geocoding
 
-Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./test/data/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
+Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./opencage_geocoder/test/data/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
 
  <img src="./address-file.png" width="50%">
 
@@ -86,6 +86,15 @@ Before running the tests, you need to export your OpenCage key as an environment
 ```bash
  export OPENCAGE_KEY=[your-key-here]
 ```
+
+### Data
+
+The [data](./opencage_geocoder/test/data/) folder contains sample data that can be used in the unit tests.
+
+* [sample_large.csv](./opencage_geocoder/test/data/sample_large.csv): The IVAUCHER dataset was made available by the Portuguese government in 2021, during the IVAUCHER program; it contains a list of gas stations addresses in Portugal. This program, along with the website where the data was available, were now deactivated. You can read the complete story [here](https://doublebyteblog.wordpress.com/2021/11/16/mapping-the-ivaucher/).
+* [sample_small.csv](./opencage_geocoder/test/data/sample_small.csv): Subset of sample_large.csv. 
+* [portuguese-poi.gpkg](./opencage_geocoder/test/data/portuguese-poi.gpkg): Portuguese Points of Interest obtained from OpenStreetMap. Dataset includes Madeira and Azores islands. Uses [GeoPackage](https://www.geopackage.org/) backend via OGR provider. This dataset was obtained from a [pygeoapi collection](https://demo.pygeoapi.io/master/collections/ogr_gpkg_poi).
+* [portuguese-poi_small.gpkg](./opencage_geocoder/test/data/portuguese-poi_small.gpkg): Subset of portuguese-poi.gpkg.
 
 ## Who is OpenCage GmbH?
 
