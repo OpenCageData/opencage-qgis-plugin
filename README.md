@@ -1,6 +1,6 @@
 # OpenCage Geocoder QGIS Plugin
 
-This processing plugin enables geocoding using the [OpenCage Geocoding API](https://opencagedata.com). In order to use it, you need to [sign up](https://opencagedata.com/users/sign_up) for an API key first. Sign up is quick and free.
+This processing plugin enables forward and reverse geocoding using the [OpenCage Geocoding API](https://opencagedata.com). In order to use it, you need to [sign up](https://opencagedata.com/users/sign_up) for an API key first. Sign up is quick and free.
 
 ## Manual Install
 
@@ -41,13 +41,13 @@ You can browse the processing panel to find the `Opencage` provider, or type `op
 
  <img src="./processing-toolbox.png" width="50%">
 
-### Forward Geocoding
+### Forward Geocoding - geocoding addresses
 
 Before runnning this algorithm you will need a text file (csv), with a field which contains locations in natural language (addresses, cities, postcodes); this will be the input of the geocoding algorithm. You can use the [sample](./opencage_geocoder/test/data/sample_small.csv) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left
 
  <img src="./address-file.png" width="50%">
 
-To run the forward geocoding algorithm, click in `Forward`. This will open a dialog with options. In the input layer, choose the file you just added (it should be added by default, if you don't have any more layers). Then select the field which contains the location you want to geocode; in this case, `Morada`. Select the other options as appropriate and choose `Run`. 
+To run the forward geocoding algorithm, click in `Geocoding addresses`. This will open a dialog with options. In the input layer, choose the file you just added (it should be added by default, if you don't have any more layers). Then select the field which contains the location you want to geocode; in this case, `Morada`. Select the other options as appropriate and choose `Run`. 
 
  <img src="./forward-geocoder.png" width="50%">
 
@@ -55,14 +55,29 @@ The geocode process will run in the background and show you a log of what is hap
 
  <img src="./run-forward.png" width="50%">
 
-<img src="./results.png" width="50%">
+The original address used for geocoding is appended as an attribute. 
+
+<img src="./results-forward.png" width="50%">
+
+### Reverse Geocoding - geocoding coordinates
+
+Before runnning this algorithm you will need a vector file with point geometries (e.g.: GeoPackage, GeoJSON, etc); this will be the input of the geocoding algorithm. You can use the [sample](./opencage_geocoder/test/data/portuguese-poi_small.gpkg) provided in the test folder. Add it to QGIS, by dragging the file into the layers panel on the left. You can use a vector file with any CRS; regardless, the geometries will always be projected to WGS84 during geocoding and the result file will always be in that projection.
+
+ <img src="./point-file.png" width="50%">
+
+To run the reverse geocoding algorithm, click in `Geocoding coordinates`. This will open a dialog with options. In the input layer, choose the file you just added (it should be added by default, if you don't have any more layers). Select the other options as appropriate and choose `Run`. 
+
+ <img src="./reverse-geocoder.png" width="50%">
+
+The geocode process will run in the background and show you a log of what is happening. When completed it will automatically add a vector file to the QGIS layer browser, which contains the geocoded locations, along with other structured information (depending on the options you selected). If you want to persist this file, you should export the layer to a geospatial format (e.g.: Geopackage, GeoJSON, etc).
+
+ <img src="./run-reverse.png" width="50%">
+
+The coordinates used for geocoding are appended as attributes. They are always translated to WGS84, if they were originally in a different CRS.
+
+<img src="./results-reverse.png" width="50%">
 
 ## Develop
-
-  * You can use the ` Makefile` to compile and deploy when you make changes. This requires GNU make (gmake). The Makefile is ready to use, however you  will have to edit it to add addional Python source files, dialogs, and translations.
-  * You can also use `pb_tool` to compile and deploy your plugin. Tweak the `pb_tool.cfg`  file included with your plugin as you add files. Install `pb_tool` using 
-  `pip` or `easy_install`. See http://loc8.cc/pb_tool for more information.
-  * Test the code using `make test` (or run tests from your IDE)
 
   For information on writing PyQGIS code, see http://loc8.cc/pyqgis_resources for a list of resources.
 

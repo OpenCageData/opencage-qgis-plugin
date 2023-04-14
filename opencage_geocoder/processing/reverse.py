@@ -169,9 +169,9 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         # dictionary returned by the processAlgorithm function.
         source = self.parameterAsSource(parameters, self.INPUT, context)
 
-        # crs = QgsCoordinateReferenceSystem("EPSG:4326")
+        crs = QgsCoordinateReferenceSystem("EPSG:4326")
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-                context, geocoder.appendedFields(), QgsWkbTypes.Point , source.sourceCrs())
+                context, geocoder.appendedFields(), QgsWkbTypes.Point , crs)
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
@@ -190,7 +190,6 @@ class ReverseGeocode(QgsProcessingAlgorithm):
                     break
 
                 geom = feature.geometry()
-                orig_geom = geom # Keep the original geometry
                 res = geom.transform(xform)
                 if res != 0:
                     raise QgsProcessingException
@@ -198,7 +197,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
                 lat = geom.asPoint().y()
                 lng = geom.asPoint().x()
                 
-                new_feature = geocoder.reverse(orig_geom, lat, lng, abbreviation, no_annotations, 
+                new_feature = geocoder.reverse(geom, lat, lng, abbreviation, no_annotations, 
                                                no_record, address_only, language, 
                                                context, feedback)
 
