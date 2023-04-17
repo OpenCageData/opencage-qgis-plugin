@@ -47,4 +47,4 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "OpenCage"))
         self.groupBox.setTitle(_translate("Form", "OpenCage API Settings"))
         self.label.setText(_translate("Form", "API key"))
-        self.label_2.setText(_translate("Form", "<html><head/><body><p>You can sign up for a key on: <a href=\"https://opencagedata.com/pricing\"><span style=\" text-decoration: underline; color:#0000ff;\">https://opencagedata.com/pricing</span></a> . If you register for a free key, please bear in mind the <a href=\"https://opencagedata.com/api#free-trial#\">limitations on latency and number of daily requests</a>.</p></body></html>"))
+        self.label_2.setText(_translate("Form", "<html><head/><body><p>You can sign up for a key on: <a href=\"https://opencagedata.com/pricing\"><span style=\" text-decoration: underline; color:#0000ff;\">https://opencagedata.com/pricing</span></a> . If you register for a free trial key, please bear in mind the <a href=\"https://opencagedata.com/api#free-trial#\">limitations on latency and number of daily requests</a>.</p></body></html>"))
