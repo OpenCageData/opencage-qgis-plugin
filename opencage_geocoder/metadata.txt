@@ -13,7 +13,7 @@ email=info@byteroad.net
 about=Geocoding using the OpenCage API.
 
 tracker=https://github.com/OpenCageData/opencage-qgis-plugin/issues
-repository=https://github.com/OpenCageData/opencage-qgis-plugin/issues
+repository=https://github.com/OpenCageData/opencage-qgis-plugin/
 # End of mandatory metadata
 
 # Recommended items:
