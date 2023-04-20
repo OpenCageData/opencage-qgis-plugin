@@ -258,7 +258,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         """
         Returns a localised short help string for the algorithm.
         """
-        return self.tr('Turn point geometries into human understandable place names or addresses. This process is also known as <a href="https://opencagedata.com/faq">reverse geocoding</a>. <br>The coordinates used for geocoding are appended as attributes in the output file; for information about the other attributes, please check the help.')
+        return self.tr('<p>Turn point geometries into human understandable place names or addresses. This process is also known as reverse geocoding.</p> <p>The coordinates used for geocoding are appended as attributes in the output file.</p><p>For information about the other search attributes, please check the help and <a href="https://opencagedata.com/tutorials/geocode-in-qgis">tutorial</a></p>.')
     
     def helpString(self):
         """

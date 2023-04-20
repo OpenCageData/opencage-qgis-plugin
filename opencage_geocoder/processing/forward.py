@@ -292,7 +292,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         """
         Returns a localised short help string for the algorithm.
         """
-        return self.tr('Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location tag in human language) to point geometries. This process is also known as <a href="https://opencagedata.com/faq">forward geocoding</a>. <br>The original address used for geocoding is appended as an attribute in the output file; for information about the other attributes, please check the help.')
+        return self.tr('<p>Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location text in human language) to point geometries. This process is also known as forward geocoding.</p> <p>The original address used for geocoding is appended as an attribute in the output file.</p><p>For information about the other attributes, please check the help and <a href="https://opencagedata.com/tutorials/geocode-in-qgis">tutorial</a></p>.')
     
     def helpString(self):
         """

@@ -1,6 +1,8 @@
 # This file contains metadata for your plugin.
+# https://docs.qgis.org/3.28/en/docs/pyqgis_developer_cookbook/plugins/plugins.html#plugin-metadata-table
 
-# This file should be included when you package your plugin.# Mandatory items:
+# This file should be included when you package your plugin.
+# Mandatory items:
 
 [general]
 name=OpenCage Geocoder
@@ -28,7 +30,6 @@ tags=python,geocoding,forward geocoder,reverse geocoder,addresses
 homepage=https://opencagedata.com/
 category=Analysis
 icon=icon.png
-# experimental flag
 experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
