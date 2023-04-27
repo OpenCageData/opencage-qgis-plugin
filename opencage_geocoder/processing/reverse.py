@@ -57,8 +57,8 @@ from .locale_helper import LocaleHelper
 
 import csv
 
-import logging
-logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
+# import logging
+# logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 class ReverseGeocode(QgsProcessingAlgorithm):
     """

@@ -37,8 +37,8 @@ from .reverse import ReverseGeocode
 
 from opencage_geocoder.gui.gui_utils import GuiUtils
 
-import logging
-logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
+# import logging
+# logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 class OpenCageProvider(QgsProcessingProvider):
     """
@@ -53,7 +53,7 @@ class OpenCageProvider(QgsProcessingProvider):
         self.api_key = None
         self.region = None
 
-        logging.debug("START*****************")
+        # logging.debug("START*****************")
 
     def unload(self):
         """
