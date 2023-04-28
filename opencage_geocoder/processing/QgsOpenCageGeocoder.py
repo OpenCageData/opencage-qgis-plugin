@@ -44,8 +44,8 @@ from qgis.analysis import QgsBatchGeocodeAlgorithm
 
 import json as jsn
 
-import logging
-logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
+# import logging
+# logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 class QgsOpenCageGeocoder(QgsGeocoderInterface):
 
@@ -123,7 +123,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
             for k,v in json[0]['components'].items():
                 if k in self.fieldList:
                     new_feature.setAttribute(k, v)
-                    logging.debug(k,v)
+                    # logging.debug(k,v)
 
             # Adds annotations
             if 'annotations' in json[0]:
@@ -134,7 +134,7 @@ class QgsOpenCageGeocoder(QgsGeocoderInterface):
             new_feature.setAttribute('confidence',json[0]['confidence'])
             new_feature.setAttribute('lat', lat)
             new_feature.setAttribute('lng', lng)
-            logging.debug('formatted',json[0]['formatted'])
+            # logging.debug('formatted',json[0]['formatted'])
 
             feedback.pushInfo("({:.2f},{:.2f}) geocoded to: {}".format(lat,lng,json[0]['formatted']))
             return new_feature

@@ -204,7 +204,7 @@ class OpenCagePlugin:
         """
 
         # pdb.set_trace()
-        #logging.debug('opensettings')
+        # logging.debug('opensettings')
 
         self.iface.showOptionsDialog(self.iface.mainWindow(), currentPage='OpenCageOptions')
         if message_bar_widget:

@@ -7,8 +7,8 @@ import collections
 import os
 import requests
 
-import logging
-logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
+# import logging
+# logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
 try:
     import aiohttp
