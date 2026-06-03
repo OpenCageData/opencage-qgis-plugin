@@ -1,0 +1,34 @@
+[flake8]
+max-line-length = 99
+
+# QGIS/Qt API overrides (initGui, createInstance, fieldList,
+# etc.) must be camelCase to match the framework, so the naming checks are
+# not applicable here.
+# N801 class name should use CapWords convention (auto-generated Ui_Form)
+
+# E128 continuation line under-indented for visual indent
+# E225 missing whitespace around operator
+# E302 expected 2 blank lines, found 1
+# E231 missing whitespace after ','
+# E501 line too long
+# W291 trailing whitespace
+# W293 blank line contains whitespace
+# E117 over-indented
+# E122 continuation line missing indentation or outdented
+# E124 closing bracket does not match visual indentation
+# E127 continuation line over-indented for visual indent
+# E201 whitespace after '(' (or '{')
+# E202 whitespace before ')' (or '}')
+# E203 whitespace before ','
+# E251 unexpected spaces around keyword / parameter equals
+# E261 at least two spaces before inline comment
+# E265 block comment should start with '# '
+# E303 too many blank lines
+# E305 expected 2 blank lines after class or function definition, found 1
+# E703 statement ends with a semicolon
+# E712 comparison to True/False should be 'is True'/'is False'
+# W292 no newline at end of file
+# W391 blank line at end of file
+
+extend-ignore = N802,N803,N806,E128,E225,E302,E231,E501,W291,W293,E117,E122,E124,E127,E201,E202,E203,E251,E261,E265,E303,E305,E703,E712,N801,W292,W391
+exclude = .git,__pycache__,.venv

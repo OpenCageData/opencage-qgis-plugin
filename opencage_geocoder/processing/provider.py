@@ -81,12 +81,6 @@ class OpenCageProvider(QgsProcessingProvider):
         """
         return GuiUtils.get_icon_svg("icon.svg")
 
-    def name(self):
-        """
-        Display name for provider
-        """
-        return self.tr('OpenCage')
-
     def versionInfo(self):
         """
         Provider plugin version

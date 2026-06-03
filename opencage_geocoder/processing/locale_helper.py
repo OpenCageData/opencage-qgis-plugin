@@ -30,7 +30,7 @@ __copyright__ = '(C) 2023 by opencage'
 
 __revision__ = '$Format:%H$'
 
-from qgis.PyQt.QtCore import QCoreApplication, QVariant, QObject
+from qgis.PyQt.QtCore import QObject
 
 # import logging
 # logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)

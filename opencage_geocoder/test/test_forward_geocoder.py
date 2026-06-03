@@ -32,11 +32,6 @@ import os.path as path
 import unittest
 import csv
 
-from qgis.core import (
-     QgsRectangle
-)
-    
-from opencage_geocoder.processing.geocoder import OpenCageGeocode
 from opencage_geocoder.processing.QgsOpenCageGeocoder import QgsOpenCageGeocoder
 
 DATA_FOLDER = path.join(path.dirname(__file__), "data")

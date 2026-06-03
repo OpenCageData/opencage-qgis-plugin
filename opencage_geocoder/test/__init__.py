@@ -25,5 +25,5 @@ if QgsApplication.instance() is None:
         # thread" during interpreter shutdown.
         global _qgs_app
         _qgs_app.exitQgis()
-        del _qgs_app
+        _qgs_app = None
         gc.collect()
