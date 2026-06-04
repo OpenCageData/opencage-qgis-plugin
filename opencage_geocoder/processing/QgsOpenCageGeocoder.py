@@ -27,7 +27,7 @@ __copyright__ = '(C) 2023 by opencage'
 
 __revision__ = '$Format:%H$'
 
-from qgis.PyQt.QtCore import QCoreApplication, QVariant
+from qgis.PyQt.QtCore import QVariant
 from qgis.core import (QgsGeocoderInterface,
                        QgsFields,
                        QgsField,
@@ -40,7 +40,6 @@ from qgis.core import (QgsGeocoderInterface,
                        )
 
 from .geocoder import OpenCageGeocode
-from qgis.analysis import QgsBatchGeocodeAlgorithm
 
 import json as jsn
 

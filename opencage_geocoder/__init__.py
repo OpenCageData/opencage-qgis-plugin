@@ -26,7 +26,6 @@ __author__ = 'doublebyte'
 __date__ = '2023-01-11'
 __copyright__ = '(C) 2023 by opencage'
 
-import pdb
 #from functools import partial
 
 from qgis.PyQt import uic
@@ -45,7 +44,6 @@ from qgis.core import (
 )
 from qgis.gui import (
     QgsOptionsPageWidget,
-    QgsGeocoderLocatorFilter,
     QgsOptionsWidgetFactory
 )
 
@@ -188,8 +186,7 @@ class OpenCagePlugin:
                 bar = self.iface.messageBar()
                 widget = bar.createMessage(self.tr('OpenCage'), 
                     self.tr("No API key entered, please configure"), bar)
-                message_bar_widget=widget
-                settings_button = QPushButton("Enter API Key…", 
+                settings_button = QPushButton("Enter API Key…",
                     pressed=self.open_settings)
                 widget.layout().addWidget(settings_button)
                 bar.pushWidget(widget, Qgis.Critical)

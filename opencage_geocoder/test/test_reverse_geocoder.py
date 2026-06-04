@@ -30,16 +30,8 @@ __revision__ = '$Format:%H$'
 import os
 import os.path as path
 import unittest
-import csv
+from qgis.core import QgsVectorLayer
 
-from qgis.core import (
-     QgsRectangle,
-    QgsVectorLayer,
-    QgsProject,
-    QgsApplication
-)
-    
-from opencage_geocoder.processing.geocoder import OpenCageGeocode
 from opencage_geocoder.processing.QgsOpenCageGeocoder import QgsOpenCageGeocoder
 
 DATA_FOLDER = path.join(path.dirname(__file__), "data")
@@ -96,7 +88,6 @@ class TestReverseGeoCoding(unittest.TestCase):
         """
         path_to_gpkg = path.join(DATA_FOLDER, 'portuguese-poi_small.gpkg')
         # print(path_to_gpkg)
-        layer = QgsVectorLayer(path_to_gpkg,"test","ogr")
         gpkg_layer = path_to_gpkg + "|layername=portuguesepoi__portuguese_points_of_interest_via_ogr_gpkg"
         vlayer = QgsVectorLayer(gpkg_layer, "poi layer", "ogr")
 

@@ -4,7 +4,6 @@ from datetime import datetime
 from decimal import Decimal
 import collections
 
-import os
 import requests
 
 # import logging

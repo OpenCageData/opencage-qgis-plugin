@@ -30,7 +30,7 @@ __copyright__ = '(C) 2023 by opencage'
 
 __revision__ = '$Format:%H$'
 
-from qgis.PyQt.QtCore import QCoreApplication, QVariant
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingAlgorithm,
@@ -39,12 +39,8 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterBoolean,
                        QgsProcessingParameterEnum,
                        QgsSettings,
-                       QgsField,
-                       QgsFields,
                        QgsWkbTypes,
                        QgsCoordinateReferenceSystem,
-                       QgsFeature,
-                       QgsPoint,
                        QgsProcessingParameterDefinition,
                        QgsProcessingException,
                        QgsProcessingParameterExtent,
@@ -52,8 +48,6 @@ from qgis.core import (QgsProcessing,
 
 from .QgsOpenCageGeocoder import QgsOpenCageGeocoder
 from .locale_helper import LocaleHelper
-
-import csv
 
 # import logging
 # logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
