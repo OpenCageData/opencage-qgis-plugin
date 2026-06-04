@@ -39,10 +39,11 @@ DATA_FOLDER = path.join(path.dirname(__file__), "data")
 # Note: Export yout api key from the command line, before running this test
 API_KEY = os.environ["OPENCAGE_KEY"]
 
-lat=32.797545
-lng=-17.04206
+lat = 32.797545
+lng = -17.04206
 simple_result = "Grutas e Centro do Vulcanismo, Estrada Dom João V, 9240-218 São Vicente, Madeira, Portugal"
 address_only = "Estrada Dom João V, 9240-218 São Vicente, Madeira, Portugal"
+
 
 class TestReverseGeoCoding(unittest.TestCase):
     """
@@ -62,7 +63,7 @@ class TestReverseGeoCoding(unittest.TestCase):
         Simple reverse geocoding test: sends a pair of
         coordinates and should return a geocoded string.
         """
-        json = self.openCageGeocoder.geocoder.reverse_geocode(lat,lng)
+        json = self.openCageGeocoder.geocoder.reverse_geocode(lat, lng)
         formatted = json[0]['formatted']
         # print(formatted)
 
@@ -73,8 +74,8 @@ class TestReverseGeoCoding(unittest.TestCase):
         Forward geocoding test with address only: sends an address string
         and should return the geocoded address only (e.g.: without poi).
         """
-        json = self.openCageGeocoder.geocoder.reverse_geocode(lat,lng,address_only=1)
-        
+        json = self.openCageGeocoder.geocoder.reverse_geocode(lat, lng, address_only=1)
+
         formatted = json[0]['formatted']
         # print(formatted)
 
@@ -103,8 +104,8 @@ class TestReverseGeoCoding(unittest.TestCase):
             for feature in features:
                 # fetch geometry
                 geom = feature.geometry()
-                json = self.openCageGeocoder.geocoder.reverse_geocode(geom.asPoint().y(),
-                                                                        geom.asPoint().x())        
+                json = self.openCageGeocoder.geocoder.reverse_geocode(
+                    geom.asPoint().y(), geom.asPoint().x())
                 if json:
                     results.append(json[0]['formatted'])
                     # print(results[len(results)-1])

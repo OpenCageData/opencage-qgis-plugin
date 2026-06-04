@@ -44,6 +44,7 @@ query_options = "Avenida Paulista, São Paulo, Brazil"
 simple_result = "Comércio Square, 1100-148 Lisbon, Portugal"
 result_options = "Avenida Paulista, Consolação, São Paulo - SP, 01414-000, Brésil"
 
+
 class TestForwardGeoCoding(unittest.TestCase):
     """
     This class tests the forward geocoding algorithm.
@@ -73,11 +74,11 @@ class TestForwardGeoCoding(unittest.TestCase):
         Forward geocoding test with options: sends an address string
         with options and should return a geocoded string.
         """
-        json = self.openCageGeocoder.geocoder.geocode(query_options, abbrv=0, no_annotations=1,
-                                     no_record=0, language="fr",
-                                     countrycode="BR"
-                                     )
-        
+        json = self.openCageGeocoder.geocoder.geocode(
+            query_options, abbrv=0, no_annotations=1,
+            no_record=0, language="fr",
+            countrycode="BR")
+
         formatted = json[0]['formatted']
         # print(formatted)
 
@@ -93,7 +94,7 @@ class TestForwardGeoCoding(unittest.TestCase):
 
         with open(path.join(DATA_FOLDER, 'sample_small.csv'), 'r') as filename:
             for col in csv.DictReader(filename):
-                json = self.openCageGeocoder.geocoder.geocode(col['Morada_'],countrycode="PT,BR")
+                json = self.openCageGeocoder.geocoder.geocode(col['Morada_'], countrycode="PT,BR")
                 if json:
                     results.append(json[0]['formatted'])
 

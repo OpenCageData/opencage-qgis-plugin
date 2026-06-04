@@ -40,6 +40,7 @@ from opencage_geocoder.gui.gui_utils import GuiUtils
 # import logging
 # logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
+
 class OpenCageProvider(QgsProcessingProvider):
     """
     Defines the OpenCage provider.
@@ -65,7 +66,7 @@ class OpenCageProvider(QgsProcessingProvider):
     def loadAlgorithms(self):
         """
         Loads all algorithms belonging to this provider.
-        """     
+        """
         self.addAlgorithm(ForwardGeocode())
         self.addAlgorithm(ReverseGeocode())
 

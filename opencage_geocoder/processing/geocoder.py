@@ -18,6 +18,7 @@ except ImportError:
 # def backoff_max_time():
 #     return int(os.environ.get('BACKOFF_MAX_TIME', '120'))
 
+
 class OpenCageGeocodeError(Exception):
 
     """Base class for all errors/exceptions that can happen when geocoding."""
@@ -244,10 +245,10 @@ class OpenCageGeocode:
             if self.session:
                 response = self.session.get(self.url, params=params, timeout=timeout)
             else:
-                response = requests.get(self.url, params=params, timeout=timeout) # pylint: disable=missing-timeout
+                response = requests.get(self.url, params=params, timeout=timeout)  # pylint: disable=missing-timeout
         except requests.exceptions.Timeout as excinfo:
             raise UnknownError("Request timed out") from excinfo
-        
+
         try:
             response_json = response.json()
         except ValueError as excinfo:
@@ -309,8 +310,8 @@ class OpenCageGeocode:
         if not isinstance(query, str):
             raise InvalidInputError(bad_value=query)
 
-        data = { 'q': query, 'key': self.key }
-        data.update(params) # Add user parameters
+        data = {'q': query, 'key': self.key}
+        data.update(params)  # Add user parameters
         return data
 
 

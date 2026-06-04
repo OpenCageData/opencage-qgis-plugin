@@ -52,6 +52,7 @@ from .locale_helper import LocaleHelper
 # import logging
 # logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
+
 class ReverseGeocode(QgsProcessingAlgorithm):
     """
     This algorithm takes a vector file with point geometries
@@ -91,37 +92,46 @@ class ReverseGeocode(QgsProcessingAlgorithm):
             QgsProcessingParameterFeatureSource(
                 self.INPUT,
                 self.tr('Point Layer (results will be added as attributes)'),
-                [QgsProcessing.TypeVectorPoint] # accepts point geometry, *only*
+                [QgsProcessing.TypeVectorPoint]  # accepts point geometry, *only*
             )
         )
 
         abbrvPar = QgsProcessingParameterBoolean(
-            self.ABBRV, self.tr('Attempt to abbreviate and shorten the returned address (on the "formatted" field)'), defaultValue=False)
-        
+            self.ABBRV,
+            self.tr('Attempt to abbreviate and shorten the returned address (on the "formatted" field)'),
+            defaultValue=False)
+
         noAnnotationsPar = QgsProcessingParameterBoolean(
-            self.NO_ANNOTATIONS, self.tr('Additional information about the result location (e.g.: extra fields). Switch off for faster response!'), defaultValue=False)
-    
+            self.NO_ANNOTATIONS,
+            self.tr('Additional information about the result location (e.g.: extra fields). Switch off for faster response!'),
+            defaultValue=False)
+
         noRecordPar = QgsProcessingParameterBoolean(
-            self.NO_RECORD, self.tr('Privacy mode: do not log query contents. It may limit customer support.'), defaultValue=False)
+            self.NO_RECORD,
+            self.tr('Privacy mode: do not log query contents. It may limit customer support.'),
+            defaultValue=False)
 
         addressOnly = QgsProcessingParameterBoolean(
-            self.ADDRESS, self.tr(' Include only the address (exluding POI names) in the formatted string'), defaultValue=False)
+            self.ADDRESS,
+            self.tr(' Include only the address (exluding POI names) in the formatted string'),
+            defaultValue=False)
 
         # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
         # (List of common primary language subtags)
         langPar = QgsProcessingParameterEnum(
-                self.LANGUAGE,
-                self.tr('Format results in this language, if possible'),
-                options=self.localhelper.getLanguageStrings(),
-                defaultValue=0,
-                optional=False)
-        
+            self.LANGUAGE,
+            self.tr('Format results in this language, if possible'),
+            options=self.localhelper.getLanguageStrings(),
+            defaultValue=0,
+            optional=False)
+
         abbrvPar.setFlags(abbrvPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(abbrvPar)
 
-        noAnnotationsPar.setFlags(noAnnotationsPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        noAnnotationsPar.setFlags(
+            noAnnotationsPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noAnnotationsPar)
-    
+
         noRecordPar.setFlags(noRecordPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noRecordPar)
 
@@ -143,12 +153,12 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         Here is where the processing itself takes place.
         """
 
-        abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
-        no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 1
-        no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) == True else 0
-        address_only = 1 if self.parameterAsBool(parameters, self.ADDRESS, context) == True else 0
+        abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) else 0
+        no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) else 1
+        no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) else 0
+        address_only = 1 if self.parameterAsBool(parameters, self.ADDRESS, context) else 0
 
-        lang_idx= self.parameterAsInt(parameters, self.LANGUAGE, context)
+        lang_idx = self.parameterAsInt(parameters, self.LANGUAGE, context)
         language = self.localhelper.parseLanguage(lang_idx)
 
         settings = QgsSettings()
@@ -162,8 +172,9 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         source = self.parameterAsSource(parameters, self.INPUT, context)
 
         crs = QgsCoordinateReferenceSystem("EPSG:4326")
-        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-                context, geocoder.appendedFields(), QgsWkbTypes.Point , crs)
+        (sink, dest_id) = self.parameterAsSink(
+            parameters, self.OUTPUT,
+            context, geocoder.appendedFields(), QgsWkbTypes.Point, crs)
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
@@ -172,9 +183,10 @@ class ReverseGeocode(QgsProcessingAlgorithm):
 
         try:
             # Make sure geometries are in WGS84
-            xform = QgsCoordinateTransform(source.sourceCrs(),
-                                    QgsCoordinateReferenceSystem("EPSG:4326"),
-                                      QgsProject.instance())
+            xform = QgsCoordinateTransform(
+                source.sourceCrs(),
+                QgsCoordinateReferenceSystem("EPSG:4326"),
+                QgsProject.instance())
 
             for current, feature in enumerate(features):
                 # Stop the algorithm if cancel button has been clicked
@@ -185,13 +197,14 @@ class ReverseGeocode(QgsProcessingAlgorithm):
                 res = geom.transform(xform)
                 if res != 0:
                     raise QgsProcessingException
-                
+
                 lat = geom.asPoint().y()
                 lng = geom.asPoint().x()
-                
-                new_feature = geocoder.reverse(geom, lat, lng, abbreviation, no_annotations, 
-                                               no_record, address_only, language, 
-                                               context, feedback)
+
+                new_feature = geocoder.reverse(
+                    geom, lat, lng, abbreviation, no_annotations,
+                    no_record, address_only, language,
+                    context, feedback)
 
                 if new_feature:
                     sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
@@ -200,7 +213,7 @@ class ReverseGeocode(QgsProcessingAlgorithm):
                 feedback.setProgress(int(current * total))
 
             return {self.OUTPUT: dest_id}
-    
+
         except Exception as e:
             feedback.reportError("Error: {}".format(e), True)
             raise QgsProcessingException
@@ -251,17 +264,15 @@ class ReverseGeocode(QgsProcessingAlgorithm):
         Returns a localised short help string for the algorithm.
         """
         return self.tr('<p>Turn point geometries into human understandable place names or addresses. This process is also known as reverse geocoding.</p> <p>The coordinates used for geocoding are appended as attributes in the output file.</p><p>For information about the other search attributes, please check the help and <a href="https://opencagedata.com/tutorials/geocode-in-qgis">tutorial</a></p>.')
-    
+
     def helpString(self):
         """
         Returns a localised help string for the algorithm.
         """
         return self.tr('Geocoding coordinates')
-    
+
     def helpUrl(self):
         """
         Returns the help url.
         """
         return "https://opencagedata.com/api"
-    
-    
