@@ -52,6 +52,7 @@ from .locale_helper import LocaleHelper
 # import logging
 # logging.basicConfig(filename='/tmp/opencage.log', encoding='utf-8', level=logging.DEBUG)
 
+
 class ForwardGeocode(QgsProcessingAlgorithm):
     """
     This algorithm takes a text file with addresses and
@@ -106,44 +107,51 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
         # Set advanced parameters
         abbrvPar = QgsProcessingParameterBoolean(
-            self.ABBRV, self.tr('Attempt to abbreviate and shorten the returned address (on the "formatted" field)'), defaultValue=False)
-        
+            self.ABBRV,
+            self.tr('Attempt to abbreviate and shorten the returned address (on the "formatted" field)'),
+            defaultValue=False)
+
         noAnnotationsPar = QgsProcessingParameterBoolean(
-            self.NO_ANNOTATIONS, self.tr('Additional information about the result location (e.g.: extra fields). Switch off for faster response!'), defaultValue=False)
-    
+            self.NO_ANNOTATIONS,
+            self.tr('Additional information about the result location (e.g.: extra fields). Switch off for faster response!'),
+            defaultValue=False)
+
         noRecordPar = QgsProcessingParameterBoolean(
-            self.NO_RECORD, self.tr('Privacy mode: do not log query contents. It may limit customer support.'), defaultValue=False)
+            self.NO_RECORD,
+            self.tr('Privacy mode: do not log query contents. It may limit customer support.'),
+            defaultValue=False)
 
         extentPar = QgsProcessingParameterExtent(
-                self.BOUNDS, 
-                self.tr('Bounds: restrict the possible results to a defined bounding box'),
-                optional=True)
+            self.BOUNDS,
+            self.tr('Bounds: restrict the possible results to a defined bounding box'),
+            optional=True)
 
         # Country names from here: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
         # (ISO 3166-1 alpha-2)
         countryPar = QgsProcessingParameterEnum(
-                self.COUNTRY,
-                self.tr('Restricts results to the specified country/territory or countries'),
-                options=self.localhelper.getCountryStrings(),
-                allowMultiple = True,
-                defaultValue=None,
-                optional=True)
-        
+            self.COUNTRY,
+            self.tr('Restricts results to the specified country/territory or countries'),
+            options=self.localhelper.getCountryStrings(),
+            allowMultiple=True,
+            defaultValue=None,
+            optional=True)
+
         # Codes/names from here: https://en.wikipedia.org/wiki/IETF_language_tag
         # (List of common primary language subtags)
         langPar = QgsProcessingParameterEnum(
-                self.LANGUAGE,
-                self.tr('Format results in this language, if possible'),
-                options=self.localhelper.getLanguageStrings(),
-                defaultValue=0,
-                optional=False)
-        
+            self.LANGUAGE,
+            self.tr('Format results in this language, if possible'),
+            options=self.localhelper.getLanguageStrings(),
+            defaultValue=0,
+            optional=False)
+
         abbrvPar.setFlags(abbrvPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(abbrvPar)
 
-        noAnnotationsPar.setFlags(noAnnotationsPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        noAnnotationsPar.setFlags(
+            noAnnotationsPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noAnnotationsPar)
-    
+
         noRecordPar.setFlags(noRecordPar.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(noRecordPar)
 
@@ -178,17 +186,17 @@ class ForwardGeocode(QgsProcessingAlgorithm):
             context
         )[0]
 
-        abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) == True else 0
-        no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) == True else 1
-        no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) == True else 0
+        abbreviation = 1 if self.parameterAsBool(parameters, self.ABBRV, context) else 0
+        no_annotations = 0 if self.parameterAsBool(parameters, self.NO_ANNOTATIONS, context) else 1
+        no_record = 1 if self.parameterAsBool(parameters, self.NO_RECORD, context) else 0
 
-        lang_idx= self.parameterAsInt(parameters, self.LANGUAGE, context)
+        lang_idx = self.parameterAsInt(parameters, self.LANGUAGE, context)
         language = self.localhelper.parseLanguage(lang_idx)
 
-        country_ids= self.parameterAsEnums(parameters, self.COUNTRY, context)
+        country_ids = self.parameterAsEnums(parameters, self.COUNTRY, context)
         # logging.debug('ids: {}'.format(country_ids))
 
-        countries=[]
+        countries = []
         for i in country_ids:
             countries.append(self.localhelper.countries[i][0])
 
@@ -209,8 +217,9 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         source = self.parameterAsSource(parameters, self.INPUT, context)
 
         crs = QgsCoordinateReferenceSystem("EPSG:4326")
-        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-                context, geocoder.appendedFields(), QgsWkbTypes.Point , crs)
+        (sink, dest_id) = self.parameterAsSink(
+            parameters, self.OUTPUT,
+            context, geocoder.appendedFields(), QgsWkbTypes.Point, crs)
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
@@ -226,9 +235,10 @@ class ForwardGeocode(QgsProcessingAlgorithm):
 
                 # Retrieve the geometry and address (later we can let user decide which fields to include)
                 d = feature.attribute(feature.fieldNameIndex(address))
-                new_feature = geocoder.forward(d, abbreviation, no_annotations, 
-                                               no_record, language, extent, 
-                                               countries_str, context, feedback)
+                new_feature = geocoder.forward(
+                    d, abbreviation, no_annotations,
+                    no_record, language, extent,
+                    countries_str, context, feedback)
                 if new_feature:
                     sink.addFeature(new_feature, QgsFeatureSink.FastInsert)
 
@@ -236,7 +246,7 @@ class ForwardGeocode(QgsProcessingAlgorithm):
                 feedback.setProgress(int(current * total))
 
             return {self.OUTPUT: dest_id}
-    
+
         except Exception as e:
             feedback.reportError("Error: {}".format(e), True)
             raise QgsProcessingException
@@ -287,16 +297,15 @@ class ForwardGeocode(QgsProcessingAlgorithm):
         Returns a localised short help string for the algorithm.
         """
         return self.tr('<p>Convert addresses (e.g.: city names, place names, countries, postcodes or other form of location text in human language) to point geometries. This process is also known as forward geocoding.</p> <p>The original address used for geocoding is appended as an attribute in the output file.</p><p>For information about the other attributes, please check the help and <a href="https://opencagedata.com/tutorials/geocode-in-qgis">tutorial</a></p>.')
-    
+
     def helpString(self):
         """
         Returns a localised help string for the algorithm.
         """
         return self.tr('Geocoding addresses')
-    
+
     def helpUrl(self):
         """
         Returns the help url.
         """
         return "https://opencagedata.com/api"
-    

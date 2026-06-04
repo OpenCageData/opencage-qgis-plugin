@@ -26,7 +26,7 @@ __author__ = 'doublebyte'
 __date__ = '2023-01-11'
 __copyright__ = '(C) 2023 by opencage'
 
-#from functools import partial
+# from functools import partial
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import (
@@ -55,7 +55,8 @@ from qgis.PyQt.QtCore import pyqtRemoveInputHook
 # These lines allow you to set a breakpoint in the app
 pyqtRemoveInputHook()
 
-message_bar_widget=None
+message_bar_widget = None
+
 
 # noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name
@@ -67,8 +68,10 @@ def classFactory(iface):  # pylint: disable=invalid-name
     #
     return OpenCagePlugin(iface)
 
+
 OPTIONS_WIDGET, OPTIONS_BASE = uic.loadUiType(
     GuiUtils.get_ui_path('settings.ui'))
+
 
 class OpenCageOptionsPage(OPTIONS_WIDGET, QgsOptionsPageWidget):
     """
@@ -91,6 +94,7 @@ class OpenCageOptionsPage(OPTIONS_WIDGET, QgsOptionsPageWidget):
         Applies the new settings
         """
         self.plugin.set_api_key(self.api_key_line_edit.text())
+
 
 class OpenCageOptionsFactory(QgsOptionsWidgetFactory):
     """
@@ -174,7 +178,6 @@ class OpenCagePlugin:
         self.register()
         self.check_api_key()
 
-
     def check_api_key(self):
         """
         Checks if an API key has been entered, and warns if not.
@@ -184,16 +187,19 @@ class OpenCagePlugin:
             if QCoreApplication.instance().thread() == QThread.currentThread():
                 # Main thread, safe to create a button
                 bar = self.iface.messageBar()
-                widget = bar.createMessage(self.tr('OpenCage'), 
-                    self.tr("No API key entered, please configure"), bar)
-                settings_button = QPushButton("Enter API Key…",
+                widget = bar.createMessage(
+                    self.tr('OpenCage'),
+                    self.tr("No API key entered, please configure"),
+                    bar)
+                settings_button = QPushButton(
+                    "Enter API Key…",
                     pressed=self.open_settings)
                 widget.layout().addWidget(settings_button)
                 bar.pushWidget(widget, Qgis.Critical)
 
             return False
 
-        return True  
+        return True
 
     def open_settings(self, message_bar_widget=None):
         """
@@ -206,4 +212,4 @@ class OpenCagePlugin:
         self.iface.showOptionsDialog(self.iface.mainWindow(), currentPage='OpenCageOptions')
         if message_bar_widget:
             self.iface.messageBar().popWidget(message_bar_widget)
-            message_bar_widget=None
+            message_bar_widget = None
